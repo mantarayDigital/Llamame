@@ -20,6 +20,7 @@ import {
   demoTomorrowMeetings,
   isConvexConnected,
 } from "@/lib/data";
+import { btn, card, colorToOverlay } from "@/lib/theme";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = [
@@ -39,14 +40,6 @@ const MONTHS = [
 
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 8); // 8am–6pm
 
-/** Map meeting color tokens to CSS classes */
-const colorMap: Record<string, string> = {
-  "bg-violet": "bg-violet/80 border-violet/40",
-  "bg-accent": "bg-accent/80 border-accent/40",
-  "bg-rose": "bg-rose/80 border-rose/40",
-  "bg-green": "bg-green/80 border-green/40",
-  "bg-amber": "bg-amber/80 border-amber/40",
-};
 
 /** Generate calendar grid for a given month */
 function getCalendarDays(year: number, month: number) {
@@ -129,14 +122,14 @@ export default function CalendarPage() {
               Week
             </button>
           </div>
-          <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all">
+          <button className={btn.primary}>
             <Plus className="w-4 h-4" /> Block Time
           </button>
         </div>
       </div>
 
       {view === "month" && (
-        <div className="grid grid-cols-[1fr_320px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           {/* Calendar Grid */}
           <div className="rounded-xl border border-border bg-bg-card overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -352,7 +345,7 @@ export default function CalendarPage() {
                     >
                       {meetings.map((m) => {
                         const colors =
-                          colorMap[m.color] ?? "bg-accent/80 border-accent/40";
+                          colorToOverlay[m.color] ?? "bg-accent/80 border-accent/40";
                         return (
                           <div
                             key={m.id}

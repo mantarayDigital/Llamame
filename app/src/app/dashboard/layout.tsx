@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { appConfig } from "@/lib/config";
+import { SIDEBAR_W } from "@/lib/theme";
 import { dashboardNav } from "@/lib/navigation";
 import { demoUser } from "@/lib/demo-data";
 // Layout stays a server component — uses static demo data for sidebar.
@@ -38,7 +39,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-bg-raised border-r border-border flex flex-col px-4 py-6 z-50">
+      <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-bg-raised border-r border-border hidden lg:flex flex-col px-4 py-6 z-50">
         <Link
           href="/"
           className="text-xl font-bold px-3 mb-8"
@@ -111,7 +112,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="ml-[260px] flex-1 p-8">{children}</main>
+      <main className="lg:ml-[260px] flex-1 p-4 lg:p-8">{children}</main>
     </div>
   );
 }

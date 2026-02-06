@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { appConfig } from "@/lib/config";
+import { btn } from "@/lib/theme";
 import { useUserByHandle, useEventTypeBySlug, demoEventTypes, isConvexConnected } from "@/lib/data";
 
 /**
@@ -60,7 +61,7 @@ export default function EventBookingPage() {
         )}
         <Link
           href="/booking"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold bg-accent text-bg hover:-translate-y-0.5 transition-all"
+          className={btn.primary}
         >
           Select a time
         </Link>

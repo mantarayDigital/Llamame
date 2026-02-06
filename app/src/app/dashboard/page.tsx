@@ -9,7 +9,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
-import { defaults } from "@/lib/config";
+import { btn, card, statusStyles as themeStatusStyles, colorToBg, locationLabels as themeLocationLabels, currencyFormatter, toggle } from "@/lib/theme";
 import type { MeetingListItem, EventType, ClientListItem } from "@/lib/types";
 import {
   useDashboardStats,
@@ -27,37 +27,6 @@ import {
   isConvexConnected,
 } from "@/lib/data";
 
-/** Format currency using config defaults */
-const revenueFormatter = new Intl.NumberFormat(defaults.locale, {
-  style: "currency",
-  currency: defaults.currency,
-  maximumFractionDigits: 0,
-});
-
-/** Map location value to display label */
-const locationLabels: Record<string, string> = {
-  google_meet: "Google Meet",
-  zoom: "Zoom",
-  phone: "Phone",
-  in_person: "In Person",
-  custom: "Custom",
-};
-
-/** Map color token to Tailwind bg class */
-const colorBgMap: Record<string, string> = {
-  accent: "bg-accent",
-  violet: "bg-violet",
-  green: "bg-green",
-  amber: "bg-amber",
-  rose: "bg-rose",
-};
-
-/** Map meeting status to display properties */
-const statusStyles: Record<string, { label: string; className: string }> = {
-  confirmed: { label: "Confirmed", className: "bg-green-muted text-green" },
-  pending: { label: "Pending", className: "bg-amber-muted text-amber" },
-  cancelled: { label: "Cancelled", className: "bg-rose-muted text-rose" },
-};
 
 export default function DashboardPage() {
   // Convex hooks (fall back to demo data when not connected)
@@ -77,7 +46,7 @@ export default function DashboardPage() {
     },
     {
       label: "Revenue Collected",
-      value: revenueFormatter.format(dashboardStats.revenueCollected),
+      value: currencyFormatter.format(dashboardStats.revenueCollected),
       change: `+${dashboardStats.revenueChange}%`,
       changeLabel: "vs last week",
       up: dashboardStats.revenueChange >= 0,
@@ -104,15 +73,15 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-3 items-center">
-          <button className="w-10 h-10 rounded-lg border border-border bg-white/[0.03] text-text-sec flex items-center justify-center hover:border-border-hover hover:text-text transition">
+          <button className={btn.icon}>
             <Bell className="w-[18px] h-[18px]" />
           </button>
-          <button className="w-10 h-10 rounded-lg border border-border bg-white/[0.03] text-text-sec flex items-center justify-center hover:border-border-hover hover:text-text transition">
+          <button className={btn.icon}>
             <Search className="w-[18px] h-[18px]" />
           </button>
           <Link
             href="/dashboard/events"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all"
+            className={btn.primary}
           >
             <Plus className="w-4 h-4" /> New Event Type
           </Link>
@@ -134,7 +103,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-7">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
         {stats.map((s) => (
           <div
             key={s.label}
@@ -179,7 +148,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-[1fr_380px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
         {/* Upcoming Meetings */}
         <div className="rounded-xl border border-border bg-bg-card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -218,7 +187,7 @@ export default function DashboardPage() {
             </div>
 
             {todayMeetings.map((m) => {
-              const status = statusStyles[m.status] ?? statusStyles.pending;
+              const status = themeStatusStyles[m.status] ?? themeStatusStyles.pending;
               return (
                 <div
                   key={m.id}
@@ -253,7 +222,7 @@ export default function DashboardPage() {
             </div>
 
             {tomorrowMeetings.map((m) => {
-              const status = statusStyles[m.status] ?? statusStyles.pending;
+              const status = themeStatusStyles[m.status] ?? themeStatusStyles.pending;
               return (
                 <div
                   key={m.id}
@@ -300,12 +269,12 @@ export default function DashboardPage() {
             </div>
             <div className="p-3">
               {eventTypes.map((et) => {
-                const bgColor = colorBgMap[et.color] ?? "bg-accent";
+                const bgColor = colorToBg[et.color] ?? "bg-accent";
                 const locationLabel =
-                  locationLabels[et.location] ?? et.location;
+                  themeLocationLabels[et.location] ?? et.location;
                 const meta = `${et.duration} min${
                   et.price
-                    ? ` \u00b7 ${revenueFormatter.format(et.price)}`
+                    ? ` \u00b7 ${currencyFormatter.format(et.price)}`
                     : ""
                 } \u00b7 ${locationLabel}`;
                 return (
@@ -321,15 +290,15 @@ export default function DashboardPage() {
                       <div className="text-xs text-text-muted">{meta}</div>
                     </div>
                     <div
-                      className={`w-10 h-[22px] rounded-full relative ${
-                        et.isActive ? "bg-green/30" : "bg-white/10"
+                      className={`${toggle.track} ${
+                        et.isActive ? toggle.trackOn : toggle.trackOff
                       }`}
                     >
                       <div
-                        className={`absolute top-[3px] w-4 h-4 rounded-full transition ${
+                        className={`${toggle.thumb} ${
                           et.isActive
-                            ? "left-[21px] bg-green"
-                            : "left-[3px] bg-text-muted"
+                            ? toggle.thumbOn
+                            : toggle.thumbOff
                         }`}
                       />
                     </div>

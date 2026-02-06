@@ -42,6 +42,13 @@
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 16px;
+
+  /* Shadows — glow colors derived from accent, update together */
+  --shadow-glow: 0 0 20px rgba(34 211 238 / 0.15);
+  --shadow-glow-hover: 0 0 30px rgba(34 211 238 / 0.25);
+  --shadow-card: 0 0 0 1px rgba(255 255 255 / 0.06), 0 8px 40px rgba(0 0 0 / 0.4);
+  --shadow-card-glow: 0 0 0 1px rgba(255 255 255 / 0.06), 0 8px 40px rgba(0 0 0 / 0.4), 0 0 80px rgba(34 211 238 / 0.04);
+  --shadow-featured: 0 0 40px rgba(34 211 238 / 0.06);
 }
 
 /* Base Styles */
@@ -57,13 +64,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Selection */
+/* Selection — uses theme accent + text tokens */
 ::selection {
-  background: rgba(34, 211, 238, 0.2);
-  color: #fafafa;
+  background: var(--color-accent-muted);
+  color: var(--color-text);
 }
 
-/* Scrollbar */
+/* Scrollbar — uses theme border tokens for consistency */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -74,10 +81,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-border);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--color-border-hover);
 }

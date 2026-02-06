@@ -13,6 +13,7 @@ import {
   XCircle,
   RefreshCw,
 } from "lucide-react";
+import { btn, input as inputStyles, card, table as tableStyles, statusStyles as themeStatusStyles, currencyFormatter, statsGrid } from "@/lib/theme";
 
 interface Payment {
   id: string;
@@ -132,11 +133,6 @@ const statusConfig: Record<
   },
 };
 
-const formatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 export default function PaymentsPage() {
   const [filter, setFilter] = useState<string>("all");
@@ -176,13 +172,13 @@ export default function PaymentsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="p-5 rounded-xl border border-border bg-bg-card">
           <div className="text-xs text-text-muted font-medium mb-1">
             Total Revenue
           </div>
           <div className="text-2xl font-bold">
-            {formatter.format(totalRevenue)}
+            {currencyFormatter.format(totalRevenue)}
           </div>
           <div className="flex items-center gap-1 mt-1 text-xs text-green font-semibold">
             <ArrowUpRight className="w-3 h-3" /> +12% vs last month
@@ -193,7 +189,7 @@ export default function PaymentsPage() {
             Pending
           </div>
           <div className="text-2xl font-bold text-amber">
-            {formatter.format(pendingRevenue)}
+            {currencyFormatter.format(pendingRevenue)}
           </div>
           <div className="text-xs text-text-muted mt-1">
             {demoPayments.filter((p) => p.status === "pending").length}{" "}
@@ -205,7 +201,7 @@ export default function PaymentsPage() {
             Refunded
           </div>
           <div className="text-2xl font-bold text-violet">
-            {formatter.format(refundedAmount)}
+            {currencyFormatter.format(refundedAmount)}
           </div>
           <div className="text-xs text-text-muted mt-1">
             {demoPayments.filter((p) => p.status === "refunded").length}{" "}
@@ -217,7 +213,7 @@ export default function PaymentsPage() {
             Avg Transaction
           </div>
           <div className="text-2xl font-bold">
-            {formatter.format(
+            {currencyFormatter.format(
               totalRevenue /
                 Math.max(
                   demoPayments.filter((p) => p.status === "paid").length,
@@ -237,7 +233,7 @@ export default function PaymentsPage() {
             placeholder="Search payments..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-white/[0.03] text-sm text-text outline-none focus:border-accent transition placeholder:text-text-muted"
+            className={inputStyles.search}
           />
         </div>
         <div className="flex gap-1.5">
@@ -258,7 +254,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Payments Table */}
-      <div className="rounded-xl border border-border bg-bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-bg-card overflow-hidden overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
@@ -304,7 +300,7 @@ export default function PaymentsPage() {
                   </td>
                   <td className="px-5 py-4 text-right">
                     <span className="text-sm font-semibold">
-                      {formatter.format(p.amount)}
+                      {currencyFormatter.format(p.amount)}
                     </span>
                   </td>
                   <td className="px-5 py-4 text-center">

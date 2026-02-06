@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { appConfig, defaults, timezones } from "@/lib/config";
+import { btn, input as inputStyles, toggle } from "@/lib/theme";
 import { settingsTabs } from "@/lib/navigation";
 import { integrations } from "@/lib/integrations";
 import {
@@ -136,7 +137,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 defaultValue={demoUser.name}
-                className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition"
+                className={inputStyles.base}
               />
             </div>
             <div>
@@ -150,7 +151,7 @@ export default function SettingsPage() {
                 <input
                   type="text"
                   defaultValue={demoUser.handle}
-                  className="flex-1 px-4 py-3 rounded-r-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition"
+                  className={`${inputStyles.base} flex-1 rounded-r-lg rounded-l-none`}
                 />
               </div>
             </div>
@@ -161,14 +162,14 @@ export default function SettingsPage() {
               <input
                 type="email"
                 defaultValue={demoUser.email}
-                className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition"
+                className={inputStyles.base}
               />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">
                 Timezone
               </label>
-              <select className="w-full px-4 py-3 rounded-lg border border-border bg-bg-card text-text text-sm outline-none focus:border-accent transition cursor-pointer">
+              <select className={inputStyles.select}>
                 {timezones.map((tz) => (
                   <option key={tz.value} value={tz.value}>
                     {tz.label}
@@ -180,10 +181,10 @@ export default function SettingsPage() {
               <label className="block text-sm font-semibold mb-2">Bio</label>
               <textarea
                 defaultValue={demoUser.branding?.bio ?? ""}
-                className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition min-h-[100px] resize-y"
+                className={inputStyles.textarea}
               />
             </div>
-            <button className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg hover:-translate-y-0.5 transition-all">
+            <button className={btn.primary}>
               Save Changes
             </button>
           </div>
@@ -239,8 +240,8 @@ export default function SettingsPage() {
               history and suggested topics.
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-[22px] rounded-full bg-green/30 relative cursor-pointer">
-                <div className="absolute top-[3px] left-[21px] w-4 h-4 rounded-full bg-green" />
+              <div className={`${toggle.track} ${toggle.trackOn}`}>
+                <div className={`${toggle.thumb} ${toggle.thumbOn}`} />
               </div>
               <span className="text-sm text-text-sec">Enabled</span>
             </div>
@@ -278,8 +279,8 @@ export default function SettingsPage() {
               rescheduling suggestions.
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-[22px] rounded-full bg-green/30 relative cursor-pointer">
-                <div className="absolute top-[3px] left-[21px] w-4 h-4 rounded-full bg-green" />
+              <div className={`${toggle.track} ${toggle.trackOn}`}>
+                <div className={`${toggle.thumb} ${toggle.thumbOn}`} />
               </div>
               <span className="text-sm text-text-sec">Enabled</span>
             </div>
@@ -318,7 +319,7 @@ export default function SettingsPage() {
               </p>
             </div>
           </div>
-          <button className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg hover:-translate-y-0.5 transition-all">
+          <button className={btn.primary}>
             Save Branding
           </button>
         </div>
@@ -337,15 +338,15 @@ export default function SettingsPage() {
                 <div className="text-xs text-text-muted">{notif.desc}</div>
               </div>
               <div
-                className={`w-10 h-[22px] rounded-full relative cursor-pointer ${
-                  notif.on ? "bg-green/30" : "bg-white/10"
+                className={`${toggle.track} ${
+                  notif.on ? toggle.trackOn : toggle.trackOff
                 }`}
               >
                 <div
-                  className={`absolute top-[3px] w-4 h-4 rounded-full transition ${
+                  className={`${toggle.thumb} ${
                     notif.on
-                      ? "left-[21px] bg-green"
-                      : "left-[3px] bg-text-muted"
+                      ? toggle.thumbOn
+                      : toggle.thumbOff
                   }`}
                 />
               </div>
@@ -380,7 +381,7 @@ export default function SettingsPage() {
             <input
               type="url"
               placeholder="https://your-app.com/webhooks/llamame"
-              className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition placeholder:text-text-muted font-mono"
+              className={`${inputStyles.base} font-mono`}
             />
           </div>
           <div className="p-4 rounded-xl bg-accent-muted/50 border border-accent/15">
@@ -391,7 +392,7 @@ export default function SettingsPage() {
               </span>
             </p>
           </div>
-          <button className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg hover:-translate-y-0.5 transition-all">
+          <button className={btn.primary}>
             Save Webhook
           </button>
         </div>

@@ -12,6 +12,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
+import { currencyFormatter } from "@/lib/theme";
 
 type TimeRange = "7d" | "30d" | "90d";
 
@@ -73,11 +74,6 @@ const peakHours = [
   { hour: "4pm", pct: 30 },
 ];
 
-const formatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 export default function AnalyticsPage() {
   const [range, setRange] = useState<TimeRange>("7d");
@@ -110,7 +106,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="p-5 rounded-xl border border-border bg-bg-card">
           <div className="flex items-center gap-2 text-xs text-text-muted font-medium mb-2">
             <Calendar className="w-3.5 h-3.5" /> Bookings
@@ -124,7 +120,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center gap-2 text-xs text-text-muted font-medium mb-2">
             <DollarSign className="w-3.5 h-3.5" /> Revenue
           </div>
-          <div className="text-2xl font-bold">{formatter.format(2450)}</div>
+          <div className="text-2xl font-bold">{currencyFormatter.format(2450)}</div>
           <div className="flex items-center gap-1 mt-1 text-xs text-green font-semibold">
             <ArrowUpRight className="w-3 h-3" /> +8%
           </div>
@@ -149,7 +145,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Bookings Chart */}
         <div className="rounded-xl border border-border bg-bg-card p-6">
           <h3 className="font-semibold mb-1">Bookings</h3>
@@ -197,7 +193,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Event Types */}
         <div className="rounded-xl border border-border bg-bg-card p-6">
           <h3 className="font-semibold mb-4">Top Event Types</h3>
@@ -209,7 +205,7 @@ export default function AnalyticsPage() {
                   <span className="text-text-sec">
                     {et.bookings} bookings
                     {et.revenue > 0 &&
-                      ` · ${formatter.format(et.revenue)}`}
+                      ` · ${currencyFormatter.format(et.revenue)}`}
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">

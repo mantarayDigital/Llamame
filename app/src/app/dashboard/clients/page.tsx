@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useClients, demoClients, isConvexConnected, demoUser } from "@/lib/data";
 import type { ClientListItem } from "@/lib/types";
+import { btn, input as inputStyles, card, table as tableStyles, tagColors, currencyFormatter, statsGrid } from "@/lib/theme";
 
 /** Extended client for the table view (in production from Convex) */
 interface ClientRow {
@@ -107,11 +108,6 @@ const demoClientRows: ClientRow[] = [
   },
 ];
 
-const formatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
@@ -145,13 +141,13 @@ export default function ClientsPage() {
             Track client relationships, meeting history, and revenue.
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all">
+        <button className={btn.primary}>
           <UserPlus className="w-4 h-4" /> Add Client
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="p-5 rounded-xl border border-border bg-bg-card">
           <div className="text-xs text-text-muted font-medium mb-1">
             Total Clients
@@ -163,7 +159,7 @@ export default function ClientsPage() {
             Total Revenue
           </div>
           <div className="text-2xl font-bold">
-            {formatter.format(totalRevenue)}
+            {currencyFormatter.format(totalRevenue)}
           </div>
         </div>
         <div className="p-5 rounded-xl border border-border bg-bg-card">
@@ -177,7 +173,7 @@ export default function ClientsPage() {
             Avg Revenue/Client
           </div>
           <div className="text-2xl font-bold">
-            {formatter.format(totalRevenue / clients.length)}
+            {currencyFormatter.format(totalRevenue / clients.length)}
           </div>
         </div>
       </div>
@@ -191,7 +187,7 @@ export default function ClientsPage() {
             placeholder="Search clients..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-white/[0.03] text-sm text-text outline-none focus:border-accent transition placeholder:text-text-muted"
+            className={inputStyles.search}
           />
         </div>
         <div className="flex gap-1.5">
@@ -224,7 +220,7 @@ export default function ClientsPage() {
       </div>
 
       {/* Client Table */}
-      <div className="rounded-xl border border-border bg-bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-bg-card overflow-hidden overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
@@ -279,7 +275,7 @@ export default function ClientsPage() {
                 </td>
                 <td className="px-5 py-4 text-center">
                   <span className="text-sm font-semibold">
-                    {formatter.format(c.revenue)}
+                    {currencyFormatter.format(c.revenue)}
                   </span>
                 </td>
                 <td className="px-5 py-4 text-center">
@@ -296,13 +292,7 @@ export default function ClientsPage() {
                       <span
                         key={tag}
                         className={`px-2 py-0.5 rounded text-[0.65rem] font-semibold ${
-                          tag === "VIP"
-                            ? "bg-amber-muted text-amber"
-                            : tag === "Enterprise"
-                              ? "bg-violet-muted text-violet"
-                              : tag === "New"
-                                ? "bg-green-muted text-green"
-                                : "bg-accent-muted text-accent"
+                          tagColors[tag] ?? "bg-accent-muted text-accent"
                         }`}
                       >
                         {tag}

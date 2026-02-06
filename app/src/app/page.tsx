@@ -40,6 +40,7 @@ import { plans } from "@/lib/plans";
 import { integrations } from "@/lib/integrations";
 import { demoTestimonials, demoLandingStats } from "@/lib/demo-data";
 import { marketingNav, footerNav } from "@/lib/navigation";
+import { CONTAINER, btn } from "@/lib/theme";
 
 // ── Icon lookup for integration definitions (icon field is a string) ──
 const iconMap: Record<string, LucideIcon> = {
@@ -187,12 +188,12 @@ export default function LandingPage() {
       />
 
       {/* Nav */}
-      <nav className="sticky top-0 z-50 h-14 px-8 bg-bg/80 backdrop-blur-xl border-b border-border flex items-center">
-        <div className="max-w-[1140px] w-full mx-auto flex items-center justify-between">
+      <nav className="sticky top-0 z-50 h-14 px-4 md:px-8 bg-bg/80 backdrop-blur-xl border-b border-border flex items-center">
+        <div className={`${CONTAINER} w-full flex items-center justify-between`}>
           <Link href="/" className="text-lg font-bold tracking-tight">
             {appConfig.logoPrefix}<span className="text-accent">{appConfig.logoAccent}</span>
           </Link>
-          <div className="flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1">
             {marketingNav.map((item) => (
               <Link
                 key={item.label}
@@ -210,7 +211,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/booking"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all"
+              className={btn.primary}
             >
               <ArrowRight className="w-3.5 h-3.5" /> Get started
             </Link>
@@ -219,7 +220,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative z-[1] max-w-[1140px] mx-auto px-8 pt-24 pb-20 text-center">
+      <section className={`relative z-[1] ${CONTAINER} px-4 md:px-8 pt-24 pb-20 text-center`}>
         <div className="inline-flex items-center gap-2 px-3.5 py-1 pl-1.5 bg-accent-muted border border-accent/15 rounded-full text-xs font-medium text-accent mb-7">
           <span className="w-4.5 h-4.5 rounded-full bg-accent/15 flex items-center justify-center">
             <Sparkles className="w-2.5 h-2.5" />
@@ -243,7 +244,7 @@ export default function LandingPage() {
         <div className="flex gap-2.5 justify-center mb-5">
           <Link
             href="/booking"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all"
+            className={btn.primary}
           >
             <ArrowRight className="w-3.5 h-3.5" /> Start free
           </Link>
@@ -280,7 +281,7 @@ export default function LandingPage() {
         </div>
 
         {/* Preview */}
-        <div className="max-w-[980px] mx-auto rounded-2xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_8px_40px_rgba(0,0,0,0.4),0_0_80px_rgba(34,211,238,0.04)] bg-bg-card border border-border">
+        <div className="max-w-[980px] mx-auto rounded-2xl overflow-hidden shadow-card-glow bg-bg-card border border-border">
           <div className="flex items-center px-4 py-2.5 border-b border-border bg-bg-raised">
             <div className="flex gap-1.5 mr-4">
               <span className="w-2.5 h-2.5 rounded-full bg-text-muted/30" />
@@ -291,7 +292,7 @@ export default function LandingPage() {
               {appConfig.domain}/mantaray
             </div>
           </div>
-          <div className="grid grid-cols-[250px_1fr] min-h-[380px]">
+          <div className="hidden md:grid grid-cols-[250px_1fr] min-h-[380px]">
             <div className="p-6 border-r border-border">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-accent to-violet flex items-center justify-center font-bold text-lg text-white mb-3">
                 {appConfig.company.charAt(0)}
@@ -444,9 +445,9 @@ export default function LandingPage() {
       </section>
 
       {/* Stats */}
-      <section className="px-8 pb-24 relative z-[1]">
-        <div className="max-w-[1140px] mx-auto">
-          <div className="grid grid-cols-4 gap-px rounded-xl overflow-hidden border border-border">
+      <section className="px-4 md:px-8 pb-24 relative z-[1]">
+        <div className={CONTAINER}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-xl overflow-hidden border border-border">
             {demoLandingStats.map((s) => (
               <div key={s.label} className="p-7 text-center bg-bg-card">
                 <div
@@ -466,9 +467,9 @@ export default function LandingPage() {
       {/* Features */}
       <section
         id="features"
-        className="py-24 px-8 relative z-[1] bg-bg-raised border-y border-border"
+        className="py-24 px-4 md:px-8 relative z-[1] bg-bg-raised border-y border-border"
       >
-        <div className="max-w-[1140px] mx-auto">
+        <div className={CONTAINER}>
           <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[1.5px] text-accent mb-3">
             <Layers className="w-3.5 h-3.5" /> Features
           </div>
@@ -482,7 +483,7 @@ export default function LandingPage() {
             one.
           </p>
 
-          <div className="grid grid-cols-3 gap-px rounded-xl overflow-hidden border border-border">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px rounded-xl overflow-hidden border border-border">
             {features.map((f) => (
               <div
                 key={f.title}
@@ -512,11 +513,11 @@ export default function LandingPage() {
       </section>
 
       {/* AI Section */}
-      <section className="py-24 px-8 relative z-[1]">
-        <div className="max-w-[1140px] mx-auto">
-          <div className="grid grid-cols-2 gap-12 items-center">
+      <section className="py-24 px-4 md:px-8 relative z-[1]">
+        <div className={CONTAINER}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Chat Preview */}
-            <div className="rounded-xl overflow-hidden border border-border bg-bg-card shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_8px_40px_rgba(0,0,0,0.4)]">
+            <div className="rounded-xl overflow-hidden border border-border bg-bg-card shadow-card">
               <div className="px-4 py-3 border-b border-border bg-bg-raised flex items-center gap-2 text-sm font-semibold text-accent">
                 <Sparkles className="w-3.5 h-3.5" /> AI Scheduling Assistant
               </div>
@@ -618,9 +619,9 @@ export default function LandingPage() {
       {/* Integrations */}
       <section
         id="integrations"
-        className="py-24 px-8 relative z-[1] bg-bg-raised border-y border-border"
+        className="py-24 px-4 md:px-8 relative z-[1] bg-bg-raised border-y border-border"
       >
-        <div className="max-w-[1140px] mx-auto">
+        <div className={CONTAINER}>
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[1.5px] text-accent mb-3 justify-center">
               <Plug className="w-3.5 h-3.5" /> Integrations
@@ -632,7 +633,7 @@ export default function LandingPage() {
               One-click setup. Real-time sync. Zero configuration.
             </p>
           </div>
-          <div className="grid grid-cols-6 gap-px rounded-xl overflow-hidden border border-border">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-px rounded-xl overflow-hidden border border-border">
             {integrations.map((integ) => {
               const Icon = iconMap[integ.icon] ?? Plug;
               return (
@@ -657,8 +658,8 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-24 px-8 relative z-[1]">
-        <div className="max-w-[1140px] mx-auto">
+      <section id="pricing" className="py-24 px-4 md:px-8 relative z-[1]">
+        <div className={CONTAINER}>
           <div className="text-center mb-13">
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[1.5px] text-accent mb-3 justify-center">
               <Tag className="w-3.5 h-3.5" /> Pricing
@@ -670,13 +671,13 @@ export default function LandingPage() {
               Start free. Scale when ready. No surprises.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {pricingPlans.map((plan) => (
               <div
                 key={plan.tier}
                 className={`p-8 rounded-xl bg-bg-card border transition hover:border-border-hover relative ${
                   plan.featured
-                    ? "border-accent shadow-[0_0_40px_rgba(34,211,238,0.06)]"
+                    ? "border-accent shadow-featured"
                     : "border-border"
                 }`}
               >
@@ -711,11 +712,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/booking"
-                  className={`w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    plan.featured
-                      ? "bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5"
-                      : "bg-bg-card text-text border border-border-hover hover:border-border-strong hover:bg-bg-card-hover"
-                  }`}
+                  className={`w-full ${plan.featured ? btn.primary : btn.secondary}`}
                 >
                   {plan.cta}
                 </Link>
@@ -726,15 +723,15 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 px-8 relative z-[1] bg-bg-raised border-y border-border">
-        <div className="max-w-[1140px] mx-auto text-center">
+      <section className="py-24 px-4 md:px-8 relative z-[1] bg-bg-raised border-y border-border">
+        <div className={`${CONTAINER} text-center`}>
           <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[1.5px] text-accent mb-3 justify-center">
             <Quote className="w-3.5 h-3.5" /> Testimonials
           </div>
           <h2 className="text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold tracking-tight">
             Loved by professionals
           </h2>
-          <div className="grid grid-cols-3 gap-4 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
             {demoTestimonials.map((t) => (
               <div
                 key={t.name}
@@ -766,8 +763,8 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-8 relative z-[1] text-center">
-        <div className="max-w-[1140px] mx-auto">
+      <section className="py-24 px-4 md:px-8 relative z-[1] text-center">
+        <div className={CONTAINER}>
           <div className="py-18 px-12 rounded-2xl bg-gradient-to-br from-accent/[0.06] to-violet/[0.04] border border-accent/10 relative overflow-hidden">
             <div
               className="absolute pointer-events-none"
@@ -791,7 +788,7 @@ export default function LandingPage() {
             <div className="relative z-[1] flex gap-2.5 justify-center">
               <Link
                 href="/booking"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all"
+                className={btn.primary}
               >
                 <ArrowRight className="w-3.5 h-3.5" /> Start free
               </Link>
@@ -807,8 +804,8 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-[1] px-8 pt-12 pb-6 border-t border-border">
-        <div className="max-w-[1140px] mx-auto grid grid-cols-[2fr_repeat(3,1fr)] gap-8 mb-10">
+      <footer className="relative z-[1] px-4 md:px-8 pt-12 pb-6 border-t border-border">
+        <div className={`${CONTAINER} grid grid-cols-1 md:grid-cols-[2fr_repeat(3,1fr)] gap-8 mb-10`}>
           <div>
             <div className="text-lg font-bold tracking-tight">
               {appConfig.logoPrefix}<span className="text-accent">{appConfig.logoAccent}</span>
@@ -837,7 +834,7 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
-        <div className="max-w-[1140px] mx-auto pt-5 border-t border-border flex justify-between items-center text-xs text-text-muted">
+        <div className={`${CONTAINER} pt-5 border-t border-border flex justify-between items-center text-xs text-text-muted`}>
           <span>&copy; {appConfig.copyrightYear} {appConfig.name} by {appConfig.company}</span>
           <span>Built for professionals who respect their time</span>
         </div>

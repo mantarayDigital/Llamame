@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { appConfig } from "@/lib/config";
+import { btn, colorToBg as colorBgMapTheme, locationLabels as locationLabelMapTheme } from "@/lib/theme";
 import type { EventType } from "@/lib/types";
 import { useEventTypes, useToggleEventType, demoUser, isConvexConnected } from "@/lib/data";
 
@@ -30,23 +31,6 @@ const locationIconMap: Record<string, LucideIcon> = {
   custom: Link2,
 };
 
-/** Map location type to display label */
-const locationLabelMap: Record<string, string> = {
-  google_meet: "Google Meet",
-  zoom: "Zoom",
-  phone: "Phone",
-  in_person: "In Person",
-  custom: "Custom",
-};
-
-/** Map color token to Tailwind bg class */
-const colorBgMap: Record<string, string> = {
-  accent: "bg-accent",
-  violet: "bg-violet",
-  green: "bg-green",
-  amber: "bg-amber",
-  rose: "bg-rose",
-};
 
 export default function EventTypesPage() {
   const liveEvents = useEventTypes(isConvexConnected ? demoUser.id : undefined) as EventType[];
@@ -76,7 +60,7 @@ export default function EventTypesPage() {
             create new types.
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all">
+        <button className={btn.primary}>
           <Plus className="w-4 h-4" /> New Event Type
         </button>
       </div>
@@ -84,8 +68,8 @@ export default function EventTypesPage() {
       <div className="grid gap-4">
         {events.map((et) => {
           const LocationIcon = locationIconMap[et.location] ?? Monitor;
-          const locationLabel = locationLabelMap[et.location] ?? et.location;
-          const bgColor = colorBgMap[et.color] ?? "bg-accent";
+          const locationLabel = locationLabelMapTheme[et.location] ?? et.location;
+          const bgColor = colorBgMapTheme[et.color] ?? "bg-accent";
           return (
             <div
               key={et.id}

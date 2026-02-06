@@ -15,6 +15,7 @@ import {
   Trash2,
   type LucideIcon,
 } from "lucide-react";
+import { btn, card, toggle, statsGrid3 } from "@/lib/theme";
 
 /** Demo workflow data */
 interface Workflow {
@@ -132,13 +133,13 @@ export default function WorkflowsPage() {
             Automate emails, messages, and notifications when events happen.
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all">
+        <button className={btn.primary}>
           <Plus className="w-4 h-4" /> New Workflow
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="p-5 rounded-xl border border-border bg-bg-card">
           <div className="text-xs text-text-muted font-medium mb-1">
             Active Workflows

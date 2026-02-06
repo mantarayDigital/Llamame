@@ -14,16 +14,15 @@ import {
   Check,
   Sparkles,
 } from "lucide-react";
-import { appConfig, timezones, vibeCheckMoods, locationTypes } from "@/lib/config";
+import { appConfig, timezones, vibeCheckMoods } from "@/lib/config";
 import { useCreateBooking, demoUser, demoEventTypes, demoTimeSlots, isConvexConnected } from "@/lib/data";
+import { btn, input as inputStyles, locationLabels as locationLabelMap } from "@/lib/theme";
 
 /** The event type used on this booking page (Strategy Session). */
 const eventType = demoEventTypes[1];
 
-/** Resolve the human-readable location label from locationTypes config. */
-const locationLabel =
-  locationTypes.find((l) => l.value === eventType.location)?.label ??
-  eventType.location;
+/** Resolve the human-readable location label from centralized theme map. */
+const locationLabel = locationLabelMap[eventType.location] ?? eventType.location;
 
 /** Format price with currency symbol. */
 const formattedPrice =
@@ -109,7 +108,7 @@ export default function BookingPage() {
         }}
       />
 
-      <div className="relative z-[1] w-full max-w-[1100px] rounded-2xl border border-border bg-bg-card/80 backdrop-blur-xl overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.4),0_0_60px_rgba(34,211,238,0.04)]">
+      <div className="relative z-[1] w-full max-w-[1100px] rounded-2xl border border-border bg-bg-card/80 backdrop-blur-xl overflow-hidden shadow-card-glow">
         {/* Steps */}
         <div className="flex px-8 py-5 border-b border-border gap-0">
           {steps.map((s, i) => (
@@ -147,7 +146,7 @@ export default function BookingPage() {
         </div>
 
         {step === 2 && (
-          <div className="grid grid-cols-[320px_1fr]">
+          <div className="grid grid-cols-1 md:grid-cols-[320px_1fr]">
             {/* Host Panel */}
             <div className="p-8 border-r border-border flex flex-col">
               <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-accent to-violet flex items-center justify-center text-3xl font-bold mb-4">
@@ -307,7 +306,7 @@ export default function BookingPage() {
                 <label className="block text-sm font-semibold mb-2">
                   How are you feeling about this meeting?
                 </label>
-                <div className="flex gap-2.5">
+                <div className="flex flex-wrap gap-2.5">
                   {vibeCheckMoods.map((m) => (
                     <div
                       key={m.label}
@@ -339,7 +338,7 @@ export default function BookingPage() {
                 <input
                   type="text"
                   placeholder="e.g., A clear marketing roadmap for Q2"
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-violet transition placeholder:text-text-muted"
+                  className={inputStyles.base}
                 />
               </div>
 
@@ -352,7 +351,7 @@ export default function BookingPage() {
                 </label>
                 <textarea
                   placeholder="Context, recent changes, challenges you're facing..."
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-violet transition placeholder:text-text-muted min-h-[100px] resize-y"
+                  className={inputStyles.textarea}
                 />
               </div>
 
@@ -363,7 +362,7 @@ export default function BookingPage() {
                 <input
                   type="text"
                   placeholder="Full name"
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-violet transition placeholder:text-text-muted"
+                  className={inputStyles.base}
                 />
               </div>
 
@@ -374,14 +373,14 @@ export default function BookingPage() {
                 <input
                   type="email"
                   placeholder="you@company.com"
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-violet transition placeholder:text-text-muted"
+                  className={inputStyles.base}
                 />
               </div>
 
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setStep(4)}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-lg font-semibold text-sm bg-accent text-bg shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:-translate-y-0.5 transition-all"
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-lg font-semibold text-sm bg-accent text-bg shadow-glow hover:shadow-glow-hover hover:-translate-y-0.5 transition-all"
                 >
                   Confirm Booking
                   <ArrowRight className="w-4 h-4" />

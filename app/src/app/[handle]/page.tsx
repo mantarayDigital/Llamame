@@ -6,6 +6,7 @@ import { appConfig } from "@/lib/config";
 import { useUserByHandle, useActiveEventTypes, demoEventTypes, isConvexConnected } from "@/lib/data";
 import type { EventType } from "@/lib/types";
 import { Clock, Video, Phone, Monitor, MapPin, LinkIcon } from "lucide-react";
+import { locationLabels as locationLabelMap } from "@/lib/theme";
 
 /**
  * Public booking page for a user/org.
@@ -23,13 +24,6 @@ const locationIcons: Record<string, React.ElementType> = {
   custom: LinkIcon,
 };
 
-const locationLabels: Record<string, string> = {
-  google_meet: "Google Meet",
-  zoom: "Zoom",
-  phone: "Phone",
-  in_person: "In Person",
-  custom: "Custom",
-};
 
 export default function PublicBookingPage() {
   const params = useParams<{ handle: string }>();
@@ -70,6 +64,7 @@ export default function PublicBookingPage() {
       {/* Background glow */}
       <div
         className="fixed top-[-200px] right-[-100px] w-[500px] h-[500px] rounded-full opacity-10 pointer-events-none z-0"
+        // Decorative glow — color derives from accent (--color-accent / cyan-400)
         style={{
           background:
             "radial-gradient(circle, rgba(34,211,238,0.4), transparent 70%)",
@@ -123,7 +118,7 @@ export default function PublicBookingPage() {
                       </span>
                       <span className="flex items-center gap-1.5">
                         <LocIcon className="w-3.5 h-3.5" />{" "}
-                        {locationLabels[et.location]}
+                        {locationLabelMap[et.location]}
                       </span>
                       {et.price != null && et.price > 0 && (
                         <span className="font-medium text-text-sec">
