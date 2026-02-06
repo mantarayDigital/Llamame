@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -13,75 +13,106 @@ import {
   Globe,
   Check,
   Sparkles,
+  CalendarX,
+  RefreshCw,
 } from "lucide-react";
 import { appConfig, timezones, vibeCheckMoods } from "@/lib/config";
-import { useCreateBooking, demoUser, demoEventTypes, demoTimeSlots, isConvexConnected } from "@/lib/data";
-import { btn, input as inputStyles, locationLabels as locationLabelMap } from "@/lib/theme";
+import { demoUser, demoEventTypes } from "@/lib/data";
+import { btn, input as inputStyles, locationLabels as locationLabelMap, currencyFormatter } from "@/lib/theme";
+import { generateSlots, getAvailableDates } from "@/lib/slots";
 
 /** The event type used on this booking page (Strategy Session). */
 const eventType = demoEventTypes[1];
 
-/** Resolve the human-readable location label from centralized theme map. */
 const locationLabel = locationLabelMap[eventType.location] ?? eventType.location;
 
-/** Format price with currency symbol. */
 const formattedPrice =
-  eventType.currency === "USD"
-    ? `$${eventType.price}`
-    : `${eventType.price} ${eventType.currency}`;
+  eventType.price ? currencyFormatter.format(eventType.price) : "Free";
 
-// In production, calendar days are generated dynamically from the host's
-// availability rules, existing bookings, and calendar integrations.
-const calendarDays = [
-  // Week 1: empty slots then 1
-  { day: 0 },
-  { day: 0 },
-  { day: 0 },
-  { day: 0 },
-  { day: 0 },
-  { day: 0 },
-  { day: 1, disabled: true },
-  // Week 2
-  { day: 2, disabled: true },
-  { day: 3, disabled: true },
-  { day: 4, disabled: true },
-  { day: 5, disabled: true },
-  { day: 6, available: true, today: true },
-  { day: 7 },
-  { day: 8 },
-  // Week 3
-  { day: 9, available: true },
-  { day: 10, available: true },
-  { day: 11, available: true },
-  { day: 12, available: true },
-  { day: 13, available: true },
-  { day: 14 },
-  { day: 15 },
-  // Week 4
-  { day: 16, available: true },
-  { day: 17, available: true },
-  { day: 18, available: true },
-  { day: 19, available: true },
-  { day: 20, available: true },
-  { day: 21 },
-  { day: 22 },
-  // Week 5
-  { day: 23, available: true },
-  { day: 24, available: true },
-  { day: 25, available: true },
-  { day: 26, available: true },
-  { day: 27, available: true },
-  { day: 28 },
-  { day: 0 },
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 type Step = 1 | 2 | 3 | 4;
 
 export default function BookingPage() {
+  const now = new Date();
   const [step, setStep] = useState<Step>(2);
-  const [selectedDay, setSelectedDay] = useState(10);
-  const [selectedTime, setSelectedTime] = useState("10:00 AM");
+  const [calYear, setCalYear] = useState(now.getFullYear());
+  const [calMonth, setCalMonth] = useState(now.getMonth());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedMood, setSelectedMood] = useState("Optimistic");
+  const [bookingForm, setBookingForm] = useState({
+    name: "",
+    email: "",
+    goal: "",
+    context: "",
+  });
+
+  // Generate available dates for the current month
+  const availableDates = useMemo(
+    () =>
+      getAvailableDates(
+        calYear,
+        calMonth,
+        eventType.availability ?? [],
+        eventType.dateOverrides ?? []
+      ),
+    [calYear, calMonth]
+  );
+
+  // Generate time slots for the selected day
+  const timeSlots = useMemo(() => {
+    if (!selectedDay) return [];
+    const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
+    return generateSlots({
+      date: dateStr,
+      duration: eventType.duration,
+      availability: eventType.availability ?? [],
+      dateOverrides: eventType.dateOverrides ?? [],
+      bufferBefore: eventType.bufferBefore,
+      bufferAfter: eventType.bufferAfter,
+      minNotice: eventType.minNotice,
+      maxAdvance: eventType.maxAdvance,
+      maxPerDay: eventType.maxPerDay,
+      slotInterval: 30,
+    }).filter((s) => s.available);
+  }, [selectedDay, calYear, calMonth]);
+
+  // Calendar grid generation
+  const calendarDays = useMemo(() => {
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const offset = firstDay === 0 ? 6 : firstDay - 1;
+    const days: (number | null)[] = [];
+    for (let i = 0; i < offset; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    while (days.length % 7 !== 0) days.push(null);
+    return days;
+  }, [calYear, calMonth]);
+
+  const isCurrentMonth = calYear === now.getFullYear() && calMonth === now.getMonth();
+  const today = now.getDate();
+
+  const prevMonth = () => {
+    if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
+    else setCalMonth(calMonth - 1);
+    setSelectedDay(null);
+    setSelectedTime(null);
+  };
+
+  const nextMonth = () => {
+    if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
+    else setCalMonth(calMonth + 1);
+    setSelectedDay(null);
+    setSelectedTime(null);
+  };
+
+  const selectedDateStr = selectedDay
+    ? `${["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date(calYear, calMonth, selectedDay).getDay()]}, ${MONTHS[calMonth]} ${selectedDay}`
+    : "";
 
   const steps = [
     { num: 1, label: "Event Type" },
@@ -131,11 +162,7 @@ export default function BookingPage() {
                       : "border border-border text-text-muted"
                 }`}
               >
-                {s.num < step ? (
-                  <Check className="w-3 h-3" />
-                ) : (
-                  s.num
-                )}
+                {s.num < step ? <Check className="w-3 h-3" /> : s.num}
               </span>
               {s.label}
               {i < steps.length - 1 && (
@@ -171,18 +198,27 @@ export default function BookingPage() {
                     <Video className="w-4 h-4 opacity-70" />
                     {locationLabel}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-text-sec">
-                    <DollarSign className="w-4 h-4 opacity-70" />
-                    {formattedPrice} consultation fee
-                  </div>
+                  {eventType.price && (
+                    <div className="flex items-center gap-2 text-sm text-text-sec">
+                      <DollarSign className="w-4 h-4 opacity-70" />
+                      {formattedPrice} consultation fee
+                    </div>
+                  )}
                 </div>
               </div>
 
               <p className="text-text-sec text-sm leading-relaxed mb-6 pb-6 border-b border-border">
-                A deep-dive strategy session to discuss your digital marketing
-                goals, current challenges, and create an actionable roadmap.
-                Come prepared with your top 3 priorities.
+                {eventType.description}
               </p>
+
+              {/* Buffers & notice info */}
+              {(eventType.bufferBefore || eventType.bufferAfter || eventType.minNotice) && (
+                <div className="text-xs text-text-muted space-y-1 mb-6">
+                  {eventType.bufferBefore ? <div>Buffer: {eventType.bufferBefore}min before</div> : null}
+                  {eventType.bufferAfter ? <div>Buffer: {eventType.bufferAfter}min after</div> : null}
+                  {eventType.minNotice ? <div>Min notice: {eventType.minNotice}h</div> : null}
+                </div>
+              )}
 
               <div className="mt-auto flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-white/[0.03] border border-border text-sm text-text-sec">
                 <Globe className="w-4 h-4" />
@@ -199,13 +235,20 @@ export default function BookingPage() {
             {/* Calendar Panel */}
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
-                {/* TODO: dynamic from calendar state instead of hardcoded month */}
-                <h2 className="text-xl font-semibold">February 2026</h2>
+                <h2 className="text-xl font-semibold">
+                  {MONTHS[calMonth]} {calYear}
+                </h2>
                 <div className="flex gap-2">
-                  <button className="w-9 h-9 rounded-lg border border-border bg-transparent text-text-sec hover:border-border-hover hover:text-text transition flex items-center justify-center">
+                  <button
+                    onClick={prevMonth}
+                    className="w-9 h-9 rounded-lg border border-border bg-transparent text-text-sec hover:border-border-hover hover:text-text transition flex items-center justify-center"
+                  >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <button className="w-9 h-9 rounded-lg border border-border bg-transparent text-text-sec hover:border-border-hover hover:text-text transition flex items-center justify-center">
+                  <button
+                    onClick={nextMonth}
+                    className="w-9 h-9 rounded-lg border border-border bg-transparent text-text-sec hover:border-border-hover hover:text-text transition flex items-center justify-center"
+                  >
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -214,36 +257,42 @@ export default function BookingPage() {
               <div className="grid grid-cols-[1fr_200px] gap-6">
                 {/* Calendar grid */}
                 <div className="grid grid-cols-7 gap-1 text-center">
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-                    (d) => (
-                      <div
-                        key={d}
-                        className="text-[0.72rem] font-semibold text-text-muted py-2.5 uppercase tracking-wider"
-                      >
-                        {d}
-                      </div>
-                    )
-                  )}
-                  {calendarDays.map((d, i) => {
-                    if (d.day === 0)
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+                    <div
+                      key={d}
+                      className="text-[0.72rem] font-semibold text-text-muted py-2.5 uppercase tracking-wider"
+                    >
+                      {d}
+                    </div>
+                  ))}
+                  {calendarDays.map((day, i) => {
+                    if (day === null)
                       return <div key={`empty-${i}`} className="aspect-square" />;
-                    const isSelected = d.day === selectedDay;
+
+                    const isAvailable = availableDates.has(day);
+                    const isPast = isCurrentMonth && day < today;
+                    const isToday = isCurrentMonth && day === today;
+                    const isSelected = day === selectedDay;
+
                     return (
                       <div
-                        key={d.day}
-                        onClick={() => d.available && setSelectedDay(d.day)}
+                        key={day}
+                        onClick={() => {
+                          if (isAvailable && !isPast) {
+                            setSelectedDay(day);
+                            setSelectedTime(null);
+                          }
+                        }}
                         className={`aspect-square flex items-center justify-center rounded-xl text-sm cursor-pointer transition relative ${
                           isSelected
                             ? "bg-gradient-to-br from-accent to-violet text-white font-semibold"
-                            : d.available
+                            : isAvailable && !isPast
                               ? "text-text font-medium hover:bg-white/[0.04]"
-                              : d.disabled
-                                ? "text-text-muted opacity-30 cursor-default"
-                                : "text-text-muted cursor-default"
-                        } ${d.today && !isSelected ? "ring-1 ring-violet" : ""}`}
+                              : "text-text-muted opacity-30 cursor-default"
+                        } ${isToday && !isSelected ? "ring-1 ring-violet" : ""}`}
                       >
-                        {d.day}
-                        {d.available && !isSelected && (
+                        {day}
+                        {isAvailable && !isPast && !isSelected && (
                           <span className="absolute bottom-1 w-1 h-1 rounded-full bg-accent" />
                         )}
                       </div>
@@ -253,29 +302,33 @@ export default function BookingPage() {
 
                 {/* Time slots */}
                 <div className="border-l border-border pl-6">
-                  <h3 className="text-sm font-semibold mb-1">
-                    Available Times
-                  </h3>
+                  <h3 className="text-sm font-semibold mb-1">Available Times</h3>
                   <div className="text-xs text-text-muted mb-4">
-                    Tuesday, Feb {selectedDay}
+                    {selectedDay ? selectedDateStr : "Select a date"}
                   </div>
+                  {selectedDay && timeSlots.length === 0 && (
+                    <div className="text-center py-8">
+                      <CalendarX className="w-8 h-8 text-text-muted mx-auto mb-2" />
+                      <p className="text-sm text-text-muted">No available times</p>
+                    </div>
+                  )}
                   <div className="flex flex-col gap-1.5 max-h-[340px] overflow-y-auto">
-                    {demoTimeSlots.map((t) => (
+                    {timeSlots.map((slot) => (
                       <div
-                        key={t}
-                        onClick={() => setSelectedTime(t)}
+                        key={slot.time}
+                        onClick={() => setSelectedTime(slot.time)}
                         className={`px-3.5 py-2.5 rounded-lg text-sm font-medium border cursor-pointer transition flex items-center justify-between ${
-                          selectedTime === t
+                          selectedTime === slot.time
                             ? "bg-gradient-to-r from-accent to-violet border-transparent text-white"
                             : "border-border bg-white/[0.03] text-text-sec hover:border-accent hover:text-accent"
                         }`}
                       >
-                        {t}
-                        {selectedTime === t && (
+                        {slot.label}
+                        {selectedTime === slot.time && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setStep(3);
+                              setStep(eventType.requiresVibeCheck ? 3 : 4);
                             }}
                             className="px-3 py-1 rounded-full bg-white text-accent text-xs font-semibold"
                           >
@@ -317,12 +370,8 @@ export default function BookingPage() {
                           : "border-border bg-white/[0.03] hover:border-border-hover"
                       }`}
                     >
-                      <span className="text-3xl block mb-1.5">
-                        {m.emoji}
-                      </span>
-                      <span className="text-xs font-medium text-text-sec">
-                        {m.label}
-                      </span>
+                      <span className="text-3xl block mb-1.5">{m.emoji}</span>
+                      <span className="text-xs font-medium text-text-sec">{m.label}</span>
                     </div>
                   ))}
                 </div>
@@ -331,13 +380,13 @@ export default function BookingPage() {
               <div>
                 <label className="block text-sm font-semibold mb-2">
                   What&apos;s the #1 thing you want to walk away with?{" "}
-                  <span className="text-text-muted font-normal text-xs">
-                    (optional)
-                  </span>
+                  <span className="text-text-muted font-normal text-xs">(optional)</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g., A clear marketing roadmap for Q2"
+                  value={bookingForm.goal}
+                  onChange={(e) => setBookingForm({ ...bookingForm, goal: e.target.value })}
                   className={inputStyles.base}
                 />
               </div>
@@ -345,52 +394,44 @@ export default function BookingPage() {
               <div>
                 <label className="block text-sm font-semibold mb-2">
                   Anything we should know beforehand?{" "}
-                  <span className="text-text-muted font-normal text-xs">
-                    (optional)
-                  </span>
+                  <span className="text-text-muted font-normal text-xs">(optional)</span>
                 </label>
                 <textarea
                   placeholder="Context, recent changes, challenges you're facing..."
+                  value={bookingForm.context}
+                  onChange={(e) => setBookingForm({ ...bookingForm, context: e.target.value })}
                   className={inputStyles.textarea}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Your name
-                </label>
+                <label className="block text-sm font-semibold mb-2">Your name</label>
                 <input
                   type="text"
                   placeholder="Full name"
+                  value={bookingForm.name}
+                  onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
                   className={inputStyles.base}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Email address
-                </label>
+                <label className="block text-sm font-semibold mb-2">Email address</label>
                 <input
                   type="email"
                   placeholder="you@company.com"
+                  value={bookingForm.email}
+                  onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
                   className={inputStyles.base}
                 />
               </div>
 
               <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => setStep(4)}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-lg font-semibold text-sm bg-accent text-bg shadow-glow hover:shadow-glow-hover hover:-translate-y-0.5 transition-all"
-                >
-                  Confirm Booking
-                  <ArrowRight className="w-4 h-4" />
+                <button onClick={() => setStep(4)} className={btn.primary}>
+                  Confirm Booking <ArrowRight className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => setStep(2)}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-lg font-semibold text-sm bg-white/[0.03] text-text border border-border hover:bg-bg-card-hover transition"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
+                <button onClick={() => setStep(2)} className={btn.secondary}>
+                  <ArrowLeft className="w-4 h-4" /> Back
                 </button>
               </div>
             </div>
@@ -410,23 +451,36 @@ export default function BookingPage() {
               <div className="flex items-center gap-3 text-sm">
                 <Clock className="w-4 h-4 text-accent" />
                 <span className="text-text-sec">
-                  Tuesday, February {selectedDay}, 2026 at {selectedTime}
+                  {selectedDateStr}, {calYear} at {selectedTime}
                 </span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Video className="w-4 h-4 text-accent" />
                 <span className="text-text-sec">{locationLabel} (link sent via email)</span>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <DollarSign className="w-4 h-4 text-accent" />
-                <span className="text-text-sec">{formattedPrice} consultation fee</span>
-              </div>
+              {eventType.price && (
+                <div className="flex items-center gap-3 text-sm">
+                  <DollarSign className="w-4 h-4 text-accent" />
+                  <span className="text-text-sec">{formattedPrice} consultation fee</span>
+                </div>
+              )}
             </div>
-            <div>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-lg text-sm font-semibold bg-accent text-bg hover:-translate-y-0.5 transition-all"
+
+            {/* Reschedule / Cancel options */}
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <button
+                onClick={() => { setStep(2); setSelectedTime(null); }}
+                className={btn.ghost}
               >
+                <RefreshCw className="w-4 h-4" /> Reschedule
+              </button>
+              <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-rose hover:bg-rose-muted transition">
+                Cancel Booking
+              </button>
+            </div>
+
+            <div>
+              <Link href="/" className={btn.primary}>
                 Back to home
               </Link>
             </div>

@@ -121,8 +121,16 @@ export interface EventType {
   requiresPayment: boolean;
   bufferBefore?: number;
   bufferAfter?: number;
+  minNotice?: number; // hours
+  maxAdvance?: number; // days
   maxPerDay?: number;
   availability?: AvailabilityRule[];
+  dateOverrides?: DateOverride[];
+  customFields?: CustomField[];
+  recurrence?: RecurrenceRule;
+  groupBooking?: GroupBookingConfig;
+  redirectUrl?: string;
+  confirmationMessage?: string;
   createdAt: number;
 }
 
@@ -130,6 +138,110 @@ export interface AvailabilityRule {
   day: number; // 0 = Sunday, 1 = Monday, etc.
   startTime: string; // "09:00"
   endTime: string; // "17:00"
+}
+
+export interface DateOverride {
+  date: string; // "2026-02-14"
+  available: boolean;
+  startTime?: string;
+  endTime?: string;
+  reason?: string;
+}
+
+// ─── Custom Fields ──────────────────────────────────────────────
+
+export type CustomFieldType =
+  | "text"
+  | "textarea"
+  | "select"
+  | "checkbox"
+  | "number"
+  | "email"
+  | "phone";
+
+export interface CustomField {
+  id: string;
+  label: string;
+  type: CustomFieldType;
+  required: boolean;
+  placeholder?: string;
+  options?: string[]; // for select type
+}
+
+// ─── Recurring Events ───────────────────────────────────────────
+
+export type RecurrenceFrequency = "daily" | "weekly" | "biweekly" | "monthly";
+
+export interface RecurrenceRule {
+  frequency: RecurrenceFrequency;
+  interval: number;
+  endDate?: number;
+  count?: number;
+  daysOfWeek?: number[];
+}
+
+// ─── Group Booking ──────────────────────────────────────────────
+
+export interface GroupBookingConfig {
+  enabled: boolean;
+  maxAttendees: number;
+  minAttendees?: number;
+}
+
+// ─── Routing Forms ──────────────────────────────────────────────
+
+export interface RoutingRule {
+  id: string;
+  fieldId: string;
+  operator: "equals" | "contains" | "not_equals";
+  value: string;
+  routeTo: string; // event type slug or team member id
+}
+
+export interface RoutingForm {
+  id: string;
+  userId: string;
+  name: string;
+  fields: CustomField[];
+  rules: RoutingRule[];
+  defaultRoute: string;
+  isActive: boolean;
+  createdAt: number;
+}
+
+// ─── Email Templates ────────────────────────────────────────────
+
+export type EmailTemplateType =
+  | "booking_confirmation"
+  | "booking_reminder"
+  | "booking_cancellation"
+  | "booking_rescheduled"
+  | "follow_up"
+  | "custom";
+
+export interface EmailTemplate {
+  id: string;
+  userId: string;
+  name: string;
+  type: EmailTemplateType;
+  subject: string;
+  body: string;
+  variables: string[];
+  isActive: boolean;
+  createdAt: number;
+}
+
+// ─── Team Invitations ───────────────────────────────────────────
+
+export interface TeamInvitation {
+  id: string;
+  orgId: string;
+  email: string;
+  role: OrgRole;
+  invitedBy: string;
+  status: "pending" | "accepted" | "expired";
+  createdAt: number;
+  expiresAt: number;
 }
 
 // ─── Bookings ────────────────────────────────────────────────────

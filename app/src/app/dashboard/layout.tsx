@@ -9,7 +9,10 @@ import {
   BarChart3,
   Zap,
   CreditCard,
+  FileText,
   Settings,
+  Menu,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { appConfig } from "@/lib/config";
@@ -30,6 +33,7 @@ const iconMap: Record<string, LucideIcon> = {
   BarChart3,
   Zap,
   CreditCard,
+  FileText,
   Settings,
 };
 

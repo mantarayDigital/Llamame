@@ -45,6 +45,7 @@ export const dashboardNav: NavGroup[] = [
   {
     items: [
       { label: "Billing", href: "/dashboard/billing", icon: "CreditCard" },
+      { label: "Activity Log", href: "/dashboard/audit-log", icon: "FileText" },
       { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
     ],
   },
