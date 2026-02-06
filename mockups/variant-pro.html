@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Llamame - Professional Clean Variant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg-subtle: #f8f9fc;
+            --bg-card: #ffffff;
+            --border: #e5e7eb;
+            --border-hover: #d1d5db;
+            --text: #111827;
+            --text-sec: #6b7280;
+            --text-muted: #9ca3af;
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #e0e7ff;
+            --primary-bg: rgba(79,70,229,0.06);
+            --success: #059669;
+            --success-bg: rgba(5,150,105,0.06);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.06);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            padding: 12px 32px; background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+        }
+        .nav-inner { max-width: 1140px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-size: 1.3rem; font-weight: 700; color: var(--primary); letter-spacing: -0.3px; }
+        .nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+        .nav-links a { font-size: 0.88rem; color: var(--text-sec); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text); }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 20px; border-radius: var(--radius-sm); font-size: 0.88rem;
+            font-weight: 600; text-decoration: none; border: none; cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 1px 2px rgba(79,70,229,0.3); }
+        .btn-primary:hover { background: var(--primary-dark); box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost { background: transparent; color: var(--text-sec); }
+        .btn-ghost:hover { color: var(--text); }
+
+        /* Hero */
+        .hero {
+            max-width: 1140px; margin: 0 auto;
+            padding: 80px 32px; text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 14px 6px 8px; background: var(--primary-bg);
+            border: 1px solid var(--primary-light); border-radius: 50px;
+            font-size: 0.82rem; font-weight: 500; color: var(--primary);
+            margin-bottom: 24px;
+        }
+        .hero-badge-dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 3.8rem); font-weight: 800;
+            line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 16px;
+            max-width: 700px; margin-left: auto; margin-right: auto;
+        }
+
+        .hero p {
+            font-size: 1.15rem; color: var(--text-sec); max-width: 540px;
+            margin: 0 auto 32px; line-height: 1.7;
+        }
+
+        .hero-cta { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; }
+
+        .hero-social-proof {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            margin-bottom: 56px; font-size: 0.85rem; color: var(--text-muted);
+        }
+        .avatars-stack { display: flex; }
+        .avatar-sm {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 2px solid white; margin-left: -8px; display: flex;
+            align-items: center; justify-content: center; font-size: 0.6rem;
+            font-weight: 700; color: white;
+        }
+        .avatar-sm:first-child { margin-left: 0; }
+
+        /* Preview */
+        .hero-preview {
+            max-width: 960px; margin: 0 auto; border-radius: var(--radius-lg);
+            border: 1px solid var(--border); background: var(--bg-card);
+            box-shadow: var(--shadow-lg); overflow: hidden;
+        }
+        .preview-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
+        .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .p-dot-r { background: #ef4444; } .p-dot-y { background: #eab308; } .p-dot-g { background: #22c55e; }
+        .preview-url { flex: 1; text-align: center; font-size: 0.78rem; color: var(--text-muted); }
+
+        .preview-body { display: grid; grid-template-columns: 240px 1fr; min-height: 360px; }
+        .preview-left { padding: 20px; border-right: 1px solid var(--border); }
+        .prev-avatar { width: 48px; height: 48px; border-radius: 10px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.1rem; margin-bottom: 12px; }
+        .prev-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 1px; }
+        .prev-handle { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px; }
+        .prev-event { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+        .prev-event:hover { border-color: var(--primary); background: var(--primary-bg); }
+        .pe-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .pe-info strong { font-weight: 600; display: block; font-size: 0.82rem; }
+        .pe-info span { font-size: 0.72rem; color: var(--text-muted); }
+
+        .preview-right { padding: 20px; }
+        .pr-month { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; font-weight: 700; font-size: 0.95rem; }
+        .pr-nav { display: flex; gap: 4px; }
+        .pr-nav button { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 0.85rem; color: var(--text-sec); }
+
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; margin-bottom: 16px; }
+        .cg-label { font-size: 0.68rem; font-weight: 600; color: var(--text-muted); padding: 6px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cg-day { padding: 8px; border-radius: 8px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; color: var(--text-sec); }
+        .cg-day.avail { color: var(--text); font-weight: 500; }
+        .cg-day.avail:hover { background: var(--primary-bg); }
+        .cg-day.sel { background: var(--primary); color: white; font-weight: 600; }
+        .cg-day.off { opacity: 0.25; cursor: default; }
+
+        .time-row { display: flex; flex-wrap: wrap; gap: 6px; }
+        .time-chip {
+            padding: 7px 14px; border-radius: 6px; font-size: 0.82rem; font-weight: 500;
+            border: 1px solid var(--border); background: white; cursor: pointer;
+            transition: all 0.15s; color: var(--text-sec);
+        }
+        .time-chip:hover { border-color: var(--primary); color: var(--primary); }
+        .time-chip.sel { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Sections */
+        section { padding: 80px 32px; }
+        .section-inner { max-width: 1140px; margin: 0 auto; }
+        .section-eyebrow { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 10px; }
+        .section-title { font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 800; letter-spacing: -0.8px; margin-bottom: 10px; line-height: 1.15; }
+        .section-desc { color: var(--text-sec); font-size: 1rem; max-width: 480px; margin-bottom: 48px; }
+
+        /* Features */
+        .alt-bg { background: var(--bg-subtle); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .feature-card {
+            padding: 24px; border: 1px solid var(--border); border-radius: var(--radius);
+            background: var(--bg-card); transition: all 0.2s;
+        }
+        .feature-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
+
+        .fi-wrap { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+        .feature-card h3 { font-size: 0.98rem; font-weight: 700; margin-bottom: 6px; }
+        .feature-card p { font-size: 0.85rem; color: var(--text-sec); line-height: 1.6; }
+        .ftag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; margin-top: 12px; }
+        .ftag-ai { background: var(--primary-bg); color: var(--primary); }
+        .ftag-unique { background: #fef3c7; color: #92400e; }
+        .ftag-core { background: var(--success-bg); color: var(--success); }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+            padding: 48px 0; text-align: center;
+        }
+        .stat-item {}
+        .stat-number { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; color: var(--text); }
+        .stat-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
+
+        /* AI Section */
+        .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+        .ai-chat-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); box-shadow: var(--shadow-md); overflow: hidden; }
+        .ai-chat-header { padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 600; color: var(--primary); }
+        .ai-chat-body { padding: 20px; }
+        .chat-msg { padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; font-size: 0.85rem; max-width: 88%; line-height: 1.5; }
+        .chat-bot { background: var(--bg-subtle); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .chat-user { background: var(--primary); color: white; margin-left: auto; border-bottom-right-radius: 4px; }
+
+        .diff-features { display: flex; flex-direction: column; gap: 20px; }
+        .diff-item { display: flex; gap: 14px; }
+        .di-icon { width: 40px; height: 40px; min-width: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .diff-item h4 { font-size: 0.92rem; font-weight: 700; margin-bottom: 2px; }
+        .diff-item p { font-size: 0.85rem; color: var(--text-sec); line-height: 1.5; }
+
+        /* Integrations */
+        .integ-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+        .integ-card { padding: 20px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); text-align: center; transition: all 0.15s; }
+        .integ-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+        .ic-icon { display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: var(--text-sec); }
+        .integ-card h4 { font-size: 0.8rem; font-weight: 600; }
+        .integ-card p { font-size: 0.7rem; color: var(--text-muted); }
+
+        /* Pricing */
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .pricing-card { padding: 32px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
+        .pricing-card.featured { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), var(--shadow-lg); position: relative; }
+        .pricing-card.featured::before { content: 'Most Popular'; position: absolute; top: -10px; left: 24px; padding: 3px 12px; background: var(--primary); color: white; border-radius: 4px; font-size: 0.72rem; font-weight: 600; }
+
+        .pt-tier { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 6px; }
+        .pt-price { font-size: 2.8rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+        .pt-price span { font-size: 0.85rem; font-weight: 400; color: var(--text-muted); }
+        .pt-desc { color: var(--text-sec); font-size: 0.88rem; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .pt-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+        .pt-features li { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--text-sec); }
+        .pt-features li .check { color: var(--success); }
+        .pricing-card .btn { width: 100%; justify-content: center; }
+
+        /* CTA */
+        .cta-section { text-align: center; }
+        .cta-card { padding: 64px 48px; border-radius: var(--radius-lg); background: var(--primary); color: white; }
+        .cta-card h2 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; }
+        .cta-card p { color: rgba(255,255,255,0.75); font-size: 1.05rem; margin-bottom: 28px; }
+        .cta-card .btn-white { background: white; color: var(--primary); font-weight: 600; }
+        .cta-card .btn-white:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+        /* Footer */
+        footer { padding: 48px 32px 24px; border-top: 1px solid var(--border); }
+        .footer-inner { max-width: 1140px; margin: 0 auto; display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 32px; margin-bottom: 40px; }
+        .footer-brand p { color: var(--text-muted); font-size: 0.85rem; margin-top: 8px; max-width: 260px; }
+        .footer-col h4 { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 14px; }
+        .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .footer-col a { color: var(--text-sec); text-decoration: none; font-size: 0.88rem; }
+        .footer-col a:hover { color: var(--primary); }
+        .footer-bottom { max-width: 1140px; margin: 0 auto; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 0.78rem; color: var(--text-muted); }
+
+        .mockup-nav {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 200;
+            display: flex; gap: 4px; padding: 6px;
+            background: rgba(17,24,39,0.92); backdrop-filter: blur(20px);
+            border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .mockup-nav a { padding: 8px 18px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; color: rgba(255,255,255,0.6); text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+        .mockup-nav a:hover { color: white; background: rgba(255,255,255,0.1); }
+        .mockup-nav a.active { background: var(--primary); color: white; }
+
+        @media (max-width: 768px) {
+            .features-grid, .pricing-grid { grid-template-columns: 1fr; }
+            .integ-grid { grid-template-columns: repeat(3, 1fr); }
+            .ai-grid { grid-template-columns: 1fr; }
+            .preview-body { grid-template-columns: 1fr; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .footer-inner { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="logo">Llamame</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#integrations">Integrations</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="dashboard.html" class="btn btn-ghost">Sign in</a></li>
+                <li><a href="booking.html" class="btn btn-primary">Get started</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Now with AI-powered scheduling intelligence
+        </div>
+
+        <h1>The scheduling platform built for professionals</h1>
+
+        <p>Smart availability, AI meeting prep, integrated payments, and client intelligence. Everything you need to manage your time.</p>
+
+        <div class="hero-cta">
+            <a href="booking.html" class="btn btn-primary"><i data-lucide="arrow-right" style="width:16px;height:16px;"></i> Get started free</a>
+            <a href="#features" class="btn btn-secondary">Learn more</a>
+        </div>
+
+        <div class="hero-social-proof">
+            <div class="avatars-stack">
+                <div class="avatar-sm" style="background: var(--primary);">JR</div>
+                <div class="avatar-sm" style="background: #7c3aed;">AK</div>
+                <div class="avatar-sm" style="background: #059669;">LS</div>
+                <div class="avatar-sm" style="background: #ea580c;">MP</div>
+            </div>
+            Trusted by 2,000+ professionals
+        </div>
+
+        <div class="hero-preview">
+            <div class="preview-bar">
+                <div class="preview-dot p-dot-r"></div>
+                <div class="preview-dot p-dot-y"></div>
+                <div class="preview-dot p-dot-g"></div>
+                <div class="preview-url">llamame.io/mantaray</div>
+            </div>
+            <div class="preview-body">
+                <div class="preview-left">
+                    <div class="prev-avatar">M</div>
+                    <div class="prev-name">MantaRay Digital</div>
+                    <div class="prev-handle">llamame.io/mantaray</div>
+                    <div class="prev-event">
+                        <div class="pe-dot" style="background: var(--primary)"></div>
+                        <div class="pe-info"><strong>Discovery Call</strong><span>30 min</span></div>
+                    </div>
+                    <div class="prev-event">
+                        <div class="pe-dot" style="background: #7c3aed"></div>
+                        <div class="pe-info"><strong>Strategy Session</strong><span>60 min / $150</span></div>
+                    </div>
+                    <div class="prev-event">
+                        <div class="pe-dot" style="background: #059669"></div>
+                        <div class="pe-info"><strong>Quick Check-in</strong><span>15 min</span></div>
+                    </div>
+                </div>
+                <div class="preview-right">
+                    <div class="pr-month">February 2026 <div class="pr-nav"><button>&larr;</button><button>&rarr;</button></div></div>
+                    <div class="cal-grid">
+                        <div class="cg-label">Mo</div><div class="cg-label">Tu</div><div class="cg-label">We</div><div class="cg-label">Th</div><div class="cg-label">Fr</div><div class="cg-label">Sa</div><div class="cg-label">Su</div>
+                        <div class="cg-day off"></div><div class="cg-day off"></div><div class="cg-day off"></div><div class="cg-day off"></div><div class="cg-day off"></div><div class="cg-day off"></div><div class="cg-day off">1</div>
+                        <div class="cg-day off">2</div><div class="cg-day off">3</div><div class="cg-day off">4</div><div class="cg-day off">5</div><div class="cg-day avail">6</div><div class="cg-day">7</div><div class="cg-day">8</div>
+                        <div class="cg-day avail">9</div><div class="cg-day sel">10</div><div class="cg-day avail">11</div><div class="cg-day avail">12</div><div class="cg-day avail">13</div><div class="cg-day">14</div><div class="cg-day">15</div>
+                        <div class="cg-day avail">16</div><div class="cg-day avail">17</div><div class="cg-day avail">18</div><div class="cg-day avail">19</div><div class="cg-day avail">20</div><div class="cg-day">21</div><div class="cg-day">22</div>
+                        <div class="cg-day avail">23</div><div class="cg-day avail">24</div><div class="cg-day avail">25</div><div class="cg-day avail">26</div><div class="cg-day avail">27</div><div class="cg-day">28</div><div class="cg-day"></div>
+                    </div>
+                    <div class="time-row">
+                        <div class="time-chip">9:00 AM</div>
+                        <div class="time-chip sel">10:00 AM</div>
+                        <div class="time-chip">11:00 AM</div>
+                        <div class="time-chip">1:00 PM</div>
+                        <div class="time-chip">2:30 PM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="alt-bg" style="padding: 0 32px;">
+        <div class="section-inner">
+            <div class="stats-bar">
+                <div class="stat-item"><div class="stat-number">94%</div><div class="stat-label">Show rate</div></div>
+                <div class="stat-item"><div class="stat-number">2min</div><div class="stat-label">Setup time</div></div>
+                <div class="stat-item"><div class="stat-number">12+</div><div class="stat-label">Integrations</div></div>
+                <div class="stat-item"><div class="stat-number">4.9</div><div class="stat-label">User rating</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features">
+        <div class="section-inner">
+            <div class="section-eyebrow">Features</div>
+            <h2 class="section-title">Everything you need to<br>manage your schedule</h2>
+            <p class="section-desc">Professional scheduling tools with AI intelligence built in.</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="fi-wrap" style="background: var(--success-bg); color: var(--success);"><i data-lucide="calendar-check" style="width:20px;height:20px;"></i></div>
+                    <h3>Smart Availability</h3>
+                    <p>Buffer times, daily limits, seasonal schedules, and complex availability rules.</p>
+                    <span class="ftag ftag-core">Core</span>
+                </div>
+                <div class="feature-card">
+                    <div class="fi-wrap" style="background: var(--primary-bg); color: var(--primary);"><i data-lucide="brain" style="width:20px;height:20px;"></i></div>
+                    <h3>AI Meeting Prep</h3>
+                    <p>Auto-generated briefs with client history, notes, and suggested topics.</p>
+                    <span class="ftag ftag-ai">AI</span>
+                </div>
+                <div class="feature-card">
+                    <div class="fi-wrap" style="background: #fef3c7; color: #92400e;"><i data-lucide="globe" style="width:20px;height:20px;"></i></div>
+                    <h3>Timezone Intelligence</h3>
+                    <p>Auto-detect client timezones. Show availability in their local time.</p>
+                    <span class="ftag ftag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="fi-wrap" style="background: #dcfce7; color: #166534;"><i data-lucide="message-circle" style="width:20px;height:20px;"></i></div>
+                    <h3>WhatsApp Booking</h3>
+                    <p>Conversational booking bot. Clients book where they already chat.</p>
+                    <span class="ftag ftag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="fi-wrap" style="background: #fce4ec; color: #ad1457;"><i data-lucide="heart-pulse" style="width:20px;height:20px;"></i></div>
+                    <h3>Vibe Check Intake</h3>
+                    <p>Pre-meeting questionnaire capturing mood, goals, and context.</p>
+                    <span class="ftag ftag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="fi-wrap" style="background: var(--primary-bg); color: var(--primary);"><i data-lucide="credit-card" style="width:20px;height:20px;"></i></div>
+                    <h3>Built-in Payments</h3>
+                    <p>Stripe, PayPal integration. Collect at booking time.</p>
+                    <span class="ftag ftag-core">Core</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Section -->
+    <section class="alt-bg">
+        <div class="section-inner">
+            <div class="ai-grid">
+                <div class="ai-chat-card">
+                    <div class="ai-chat-header"><i data-lucide="sparkles" style="width:16px;height:16px;"></i> AI Scheduling Assistant</div>
+                    <div class="ai-chat-body">
+                        <div class="chat-msg chat-bot">You have 6 meetings tomorrow with no breaks. Would you like me to optimize your schedule?</div>
+                        <div class="chat-msg chat-user">Yes, move non-urgent ones to Thursday.</div>
+                        <div class="chat-msg chat-bot">Done. Moved 2 check-ins to Thursday afternoon. Added 30-minute buffers between deep-work sessions. Energy score improved from 32 to 78.</div>
+                        <div class="chat-msg chat-user">Brief me on the strategy call with Alex.</div>
+                        <div class="chat-msg chat-bot">Alex Chen, TechFlow Inc. Meeting #4. Last discussed Q1 roadmap and SEO migration timeline. She mentioned interest in paid ads. Vibe check: Excited.</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="section-eyebrow">AI Intelligence</div>
+                    <h2 class="section-title" style="margin-bottom: 24px;">Your scheduling<br>co-pilot</h2>
+                    <div class="diff-features">
+                        <div class="diff-item">
+                            <div class="di-icon" style="background: var(--primary-bg); color: var(--primary);"><i data-lucide="battery-charging" style="width:18px;height:18px;"></i></div>
+                            <div><h4>Energy-Aware Scheduling</h4><p>Maps meeting types to your peak and low energy hours automatically.</p></div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="di-icon" style="background: #fef3c7; color: #92400e;"><i data-lucide="shield" style="width:18px;height:18px;"></i></div>
+                            <div><h4>Fatigue Protection</h4><p>Detects overbooked days and suggests rescheduling proactively.</p></div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="di-icon" style="background: var(--success-bg); color: var(--success);"><i data-lucide="book-open" style="width:18px;height:18px;"></i></div>
+                            <div><h4>Client Memory</h4><p>Remembers every interaction. Surfaces context before each meeting.</p></div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="di-icon" style="background: #fce4ec; color: #ad1457;"><i data-lucide="refresh-cw" style="width:18px;height:18px;"></i></div>
+                            <div><h4>Smart Rescheduling</h4><p>One-click reschedule links with optimal time suggestions.</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations -->
+    <section id="integrations">
+        <div class="section-inner">
+            <div style="text-align: center; margin-bottom: 48px;">
+                <div class="section-eyebrow">Integrations</div>
+                <h2 class="section-title">Works with your existing tools</h2>
+            </div>
+            <div class="integ-grid">
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="calendar" style="width:22px;height:22px;"></i></div><h4>Google Calendar</h4><p>Two-way sync</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="mail" style="width:22px;height:22px;"></i></div><h4>Outlook</h4><p>Calendar & email</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="video" style="width:22px;height:22px;"></i></div><h4>Zoom</h4><p>Auto-create</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="monitor" style="width:22px;height:22px;"></i></div><h4>Google Meet</h4><p>Auto-link</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="credit-card" style="width:22px;height:22px;"></i></div><h4>Stripe</h4><p>Payments</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="smartphone" style="width:22px;height:22px;"></i></div><h4>WhatsApp</h4><p>Chat booking</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="hash" style="width:22px;height:22px;"></i></div><h4>Slack</h4><p>Notifications</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="database" style="width:22px;height:22px;"></i></div><h4>HubSpot</h4><p>CRM sync</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="send" style="width:22px;height:22px;"></i></div><h4>Mailchimp</h4><p>Auto-lists</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="file-text" style="width:22px;height:22px;"></i></div><h4>Notion</h4><p>Meeting notes</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="zap" style="width:22px;height:22px;"></i></div><h4>Zapier</h4><p>5000+ apps</p></div>
+                <div class="integ-card"><div class="ic-icon"><i data-lucide="wallet" style="width:22px;height:22px;"></i></div><h4>PayPal</h4><p>Payments</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="alt-bg">
+        <div class="section-inner">
+            <div style="text-align: center; margin-bottom: 48px;">
+                <div class="section-eyebrow">Pricing</div>
+                <h2 class="section-title">Simple, transparent pricing</h2>
+                <p class="section-desc" style="margin: 10px auto 0;">Start free. Upgrade when you're ready.</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pt-tier">Free</div>
+                    <div class="pt-price">$0<span>/mo</span></div>
+                    <p class="pt-desc">For individuals getting started.</p>
+                    <ul class="pt-features">
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> 1 event type</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Google Calendar sync</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Email notifications</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Booking page</li>
+                    </ul>
+                    <a href="#" class="btn btn-secondary">Get started</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="pt-tier">Pro</div>
+                    <div class="pt-price">$12<span>/mo</span></div>
+                    <p class="pt-desc">AI scheduling and full integrations.</p>
+                    <ul class="pt-features">
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Unlimited event types</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> AI Meeting Briefs</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> All integrations</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> WhatsApp booking</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Payments & Vibe Check</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Energy scheduling</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Start free trial</a>
+                </div>
+                <div class="pricing-card">
+                    <div class="pt-tier">Team</div>
+                    <div class="pt-price">$24<span>/seat/mo</span></div>
+                    <p class="pt-desc">For teams and organizations.</p>
+                    <ul class="pt-features">
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Everything in Pro</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Team scheduling</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> Client Intelligence</li>
+                        <li><span class="check"><i data-lucide="check" style="width:16px;height:16px;"></i></span> API access</li>
+                    </ul>
+                    <a href="#" class="btn btn-secondary">Contact sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="section-inner">
+            <div class="cta-card">
+                <h2>Ready to get started?</h2>
+                <p>Set up in under 2 minutes. No credit card required.</p>
+                <a href="booking.html" class="btn btn-white">Get started free <i data-lucide="arrow-right" style="width:16px;height:16px;"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-brand"><div class="logo">Llamame</div><p>Professional scheduling platform with AI intelligence.</p></div>
+            <div class="footer-col"><h4>Product</h4><ul><li><a href="#">Features</a></li><li><a href="#">Integrations</a></li><li><a href="#">Pricing</a></li><li><a href="#">API</a></li></ul></div>
+            <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li><li><a href="#">Contact</a></li></ul></div>
+            <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li><li><a href="#">Security</a></li></ul></div>
+        </div>
+        <div class="footer-bottom">&copy; 2026 Llamame by MantaRay Digital. All rights reserved.</div>
+    </footer>
+
+    <div class="mockup-nav">
+        <a href="index.html">Original</a>
+        <a href="variant-aurora.html">Aurora</a>
+        <a href="variant-neon.html">Neon</a>
+        <a href="variant-luxe.html">Luxe</a>
+        <a href="variant-pro.html" class="active">Pro</a>
+    </div>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Llamame - Neon Brutalist Variant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --bg: #0d0d0d;
+            --bg-card: #151515;
+            --bg-card-hover: #1a1a1a;
+            --border: #2a2a2a;
+            --border-hover: #3a3a3a;
+            --text: #e8e8e8;
+            --text-sec: #808080;
+            --text-muted: #505050;
+            --neon-green: #00ff87;
+            --neon-pink: #ff0080;
+            --neon-blue: #00d4ff;
+            --neon-yellow: #ffe600;
+            --glow-green: 0 0 20px rgba(0,255,135,0.3);
+            --glow-pink: 0 0 20px rgba(255,0,128,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+
+        /* Scanline effect */
+        .scanlines {
+            position: fixed; inset: 0; pointer-events: none; z-index: 1000;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+        }
+
+        /* Grid pattern */
+        .grid-bg {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+        .icon-lg { width: 24px; height: 24px; }
+
+        /* Nav */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 12px 32px; background: rgba(13,13,13,0.9);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+        .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 800; color: var(--neon-green); text-transform: uppercase; letter-spacing: 2px; }
+        .logo::before { content: '> '; color: var(--text-muted); }
+        .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+        .nav-links a {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 500;
+            color: var(--text-sec); text-decoration: none; padding: 8px 14px;
+            border: 1px solid transparent; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .nav-links a:hover { color: var(--neon-green); border-color: var(--border); }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 22px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; text-decoration: none; border: none; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-neon {
+            background: var(--neon-green); color: #000;
+            box-shadow: var(--glow-green);
+        }
+        .btn-neon:hover { box-shadow: 0 0 30px rgba(0,255,135,0.5); transform: translateY(-1px); }
+        .btn-outline {
+            background: transparent; color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { border-color: var(--neon-green); color: var(--neon-green); }
+        .btn-pink { background: var(--neon-pink); color: white; box-shadow: var(--glow-pink); }
+
+        /* Hero */
+        .hero {
+            position: relative; z-index: 1; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center; padding: 120px 32px 80px;
+        }
+
+        .status-bar {
+            display: inline-flex; align-items: center; gap: 10px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            color: var(--text-sec); margin-bottom: 32px;
+            padding: 8px 16px; border: 1px solid var(--border); background: var(--bg-card);
+        }
+        .status-dot { width: 8px; height: 8px; background: var(--neon-green); animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .hero h1 {
+            font-size: clamp(3rem, 7vw, 6rem); font-weight: 700;
+            line-height: 1; letter-spacing: -3px; margin-bottom: 24px;
+            max-width: 900px; text-transform: uppercase;
+        }
+        .hero h1 .neon { color: var(--neon-green); text-shadow: var(--glow-green); }
+        .hero h1 .pink { color: var(--neon-pink); text-shadow: var(--glow-pink); }
+
+        .hero p {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+            color: var(--text-sec); max-width: 500px; margin-bottom: 40px;
+            line-height: 1.7;
+        }
+
+        .hero-cta { display: flex; gap: 12px; margin-bottom: 72px; }
+
+        /* Terminal Preview */
+        .terminal {
+            width: 100%; max-width: 900px; border: 1px solid var(--border);
+            background: var(--bg-card); overflow: hidden;
+        }
+        .terminal-bar {
+            display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+            border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem; color: var(--text-muted);
+        }
+        .terminal-dots { display: flex; gap: 6px; }
+        .terminal-dots span { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--border); }
+        .terminal-body { padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+        .term-line { margin-bottom: 6px; display: flex; gap: 8px; }
+        .term-prompt { color: var(--neon-green); }
+        .term-cmd { color: var(--text); }
+        .term-output { color: var(--text-sec); padding-left: 20px; }
+        .term-highlight { color: var(--neon-pink); }
+        .term-info { color: var(--neon-blue); }
+        .term-cursor { display: inline-block; width: 8px; height: 16px; background: var(--neon-green); animation: blink 1s infinite; vertical-align: middle; }
+
+        /* Sections */
+        section { position: relative; z-index: 1; padding: 100px 32px; }
+        .section-inner { max-width: 1100px; margin: 0 auto; }
+        .section-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 3px;
+            color: var(--neon-green); margin-bottom: 12px;
+        }
+        .section-label::before { content: '// '; color: var(--text-muted); }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; letter-spacing: -1px; margin-bottom: 12px; text-transform: uppercase; }
+        .section-desc { color: var(--text-sec); font-size: 1rem; max-width: 500px; margin-bottom: 56px; }
+
+        /* Feature Grid */
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .feature-card {
+            padding: 28px; background: var(--bg-card); border: 1px solid var(--border);
+            transition: all 0.2s; position: relative; overflow: hidden;
+        }
+        .feature-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+            background: var(--neon-green); opacity: 0; transition: opacity 0.2s;
+        }
+        .feature-card:hover { background: var(--bg-card-hover); }
+        .feature-card:hover::before { opacity: 1; }
+
+        .feature-number {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--text-muted); margin-bottom: 16px;
+        }
+        .feature-icon-wrap {
+            width: 40px; height: 40px; display: flex; align-items: center;
+            justify-content: center; margin-bottom: 14px;
+        }
+        .feature-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .feature-card p { font-size: 0.85rem; color: var(--text-sec); line-height: 1.6; }
+
+        .feature-tag {
+            display: inline-block; padding: 2px 8px; margin-top: 14px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+            border: 1px solid;
+        }
+        .tag-ai { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .tag-unique { border-color: var(--neon-pink); color: var(--neon-pink); }
+        .tag-core { border-color: var(--neon-green); color: var(--neon-green); }
+
+        /* AI Demo */
+        .ai-section { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg-card); }
+        .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+
+        .ai-terminal { border: 1px solid var(--border); background: var(--bg); padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+        .ai-terminal .ai-label { color: var(--neon-pink); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .ai-msg-bot { color: var(--text-sec); margin-bottom: 12px; padding-left: 16px; border-left: 2px solid var(--neon-pink); line-height: 1.6; }
+        .ai-msg-user { color: var(--neon-green); margin-bottom: 12px; }
+        .ai-msg-user::before { content: '> '; color: var(--text-muted); }
+
+        .diff-features { display: flex; flex-direction: column; gap: 20px; }
+        .diff-item { display: flex; gap: 14px; }
+        .diff-item-icon { width: 36px; height: 36px; min-width: 36px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--neon-green); }
+        .diff-item h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .diff-item p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.5; }
+
+        /* Integrations */
+        .integ-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }
+        .integ-card {
+            padding: 24px; background: var(--bg-card); border: 1px solid var(--border);
+            text-align: center; transition: all 0.2s;
+        }
+        .integ-card:hover { background: var(--bg-card-hover); }
+        .integ-card .integ-icon-wrap { margin: 0 auto 10px; color: var(--text-sec); display: flex; align-items: center; justify-content: center; }
+        .integ-card h4 { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .integ-card p { font-size: 0.72rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+        /* Pricing */
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .pricing-card { padding: 32px; background: var(--bg-card); border: 1px solid var(--border); }
+        .pricing-card.featured { border-color: var(--neon-green); box-shadow: var(--glow-green); position: relative; }
+        .pricing-card.featured::after { content: 'RECOMMENDED'; position: absolute; top: 0; left: 0; right: 0; padding: 4px; background: var(--neon-green); color: #000; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 700; text-align: center; letter-spacing: 2px; }
+
+        .pricing-tier { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 8px; }
+        .pricing-price { font-size: 3rem; font-weight: 700; margin-bottom: 4px; }
+        .pricing-price span { font-size: 0.85rem; font-weight: 400; color: var(--text-muted); }
+        .pricing-desc { color: var(--text-sec); font-size: 0.85rem; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+        .pricing-features li { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-sec); }
+        .pricing-features li .check { color: var(--neon-green); }
+        .pricing-card .btn { width: 100%; justify-content: center; }
+
+        /* CTA */
+        .cta-section { text-align: center; }
+        .cta-box { padding: 64px; border: 1px solid var(--neon-green); box-shadow: var(--glow-green); background: var(--bg-card); }
+        .cta-box h2 { font-size: 2.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 12px; }
+        .cta-box p { color: var(--text-sec); font-size: 1rem; margin-bottom: 28px; }
+
+        /* Footer */
+        footer { position: relative; z-index: 1; padding: 48px 32px 24px; border-top: 1px solid var(--border); }
+        .footer-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 32px; margin-bottom: 40px; }
+        .footer-brand p { color: var(--text-muted); font-size: 0.82rem; margin-top: 8px; max-width: 260px; }
+        .footer-col h4 { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 14px; }
+        .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .footer-col a { color: var(--text-sec); text-decoration: none; font-size: 0.85rem; }
+        .footer-col a:hover { color: var(--neon-green); }
+        .footer-bottom { max-width: 1100px; margin: 0 auto; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+        .mockup-nav {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 200;
+            display: flex; gap: 2px; padding: 4px; background: var(--bg-card);
+            border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .mockup-nav a {
+            padding: 8px 18px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+            font-weight: 500; color: var(--text-sec); text-decoration: none; text-transform: uppercase;
+            letter-spacing: 1px; transition: all 0.2s;
+        }
+        .mockup-nav a:hover { color: var(--neon-green); background: rgba(0,255,135,0.05); }
+        .mockup-nav a.active { background: var(--neon-green); color: #000; }
+
+        @media (max-width: 768px) {
+            .features-grid, .pricing-grid { grid-template-columns: 1fr; }
+            .integ-grid { grid-template-columns: repeat(2, 1fr); }
+            .ai-grid { grid-template-columns: 1fr; }
+            .footer-inner { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+    <div class="grid-bg"></div>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="logo">Llamame</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="dashboard.html">Login</a></li>
+                <li><a href="booking.html" class="btn btn-neon" style="padding: 8px 16px;">Deploy</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="status-bar">
+            <div class="status-dot"></div>
+            SYSTEM ONLINE // AI SCHEDULING ENGINE v2.0
+        </div>
+
+        <h1>
+            KILL THE<br>
+            <span class="neon">CALENDAR</span><br>
+            <span class="pink">CHAOS</span>
+        </h1>
+
+        <p>// AI-powered scheduling that learns your patterns, protects your energy, and eliminates the back-and-forth forever.</p>
+
+        <div class="hero-cta">
+            <a href="booking.html" class="btn btn-neon"><i data-lucide="zap" style="width:16px;height:16px;"></i> Deploy Free</a>
+            <a href="#features" class="btn btn-outline"><i data-lucide="terminal" style="width:16px;height:16px;"></i> View Docs</a>
+        </div>
+
+        <!-- Terminal Preview -->
+        <div class="terminal">
+            <div class="terminal-bar">
+                <div class="terminal-dots"><span></span><span></span><span></span></div>
+                llamame://mantaray/schedule
+            </div>
+            <div class="terminal-body">
+                <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">llamame init --user mantaray</span></div>
+                <div class="term-line"><span class="term-output">&#10003; Connected to Google Calendar</span></div>
+                <div class="term-line"><span class="term-output">&#10003; WhatsApp bot activated</span></div>
+                <div class="term-line"><span class="term-output">&#10003; Stripe payments linked</span></div>
+                <div class="term-line">&nbsp;</div>
+                <div class="term-line"><span class="term-prompt">$</span><span class="term-cmd">llamame status --today</span></div>
+                <div class="term-line"><span class="term-output">&#9472; <span class="term-highlight">3 meetings</span> scheduled</span></div>
+                <div class="term-line"><span class="term-output">&#9472; Energy score: <span class="term-info">78/100</span> (peak hours available)</span></div>
+                <div class="term-line"><span class="term-output">&#9472; Revenue today: <span style="color: var(--neon-green)">$450</span></span></div>
+                <div class="term-line"><span class="term-output">&#9472; Next: <span class="term-highlight">Strategy Session</span> w/ Sarah @ 10:00 AM</span></div>
+                <div class="term-line"><span class="term-output">&nbsp;&nbsp;AI Brief: Last discussed SEO migration, wants budget update</span></div>
+                <div class="term-line">&nbsp;</div>
+                <div class="term-line"><span class="term-prompt">$</span><span class="term-cursor"></span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features">
+        <div class="section-inner">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Built Different</h2>
+            <p class="section-desc">Not just scheduling. An intelligent operating system for your time.</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-number">01</div>
+                    <div class="feature-icon-wrap"><i data-lucide="calendar-check" style="width:24px;height:24px;color:var(--neon-green)"></i></div>
+                    <h3>Smart Availability</h3>
+                    <p>Complex rules, buffer times, daily limits, seasonal schedules.</p>
+                    <span class="feature-tag tag-core">Core</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-number">02</div>
+                    <div class="feature-icon-wrap"><i data-lucide="brain" style="width:24px;height:24px;color:var(--neon-blue)"></i></div>
+                    <h3>AI Meeting Prep</h3>
+                    <p>Auto-generated briefs with client history and talking points.</p>
+                    <span class="feature-tag tag-ai">AI</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-number">03</div>
+                    <div class="feature-icon-wrap"><i data-lucide="globe" style="width:24px;height:24px;color:var(--neon-pink)"></i></div>
+                    <h3>Timezone IQ</h3>
+                    <p>Auto-detect zones, show local time, prevent 3 AM bookings.</p>
+                    <span class="feature-tag tag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-number">04</div>
+                    <div class="feature-icon-wrap"><i data-lucide="message-circle" style="width:24px;height:24px;color:var(--neon-green)"></i></div>
+                    <h3>WhatsApp Booking</h3>
+                    <p>Conversational bot lets clients book where they already are.</p>
+                    <span class="feature-tag tag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-number">05</div>
+                    <div class="feature-icon-wrap"><i data-lucide="heart-pulse" style="width:24px;height:24px;color:var(--neon-pink)"></i></div>
+                    <h3>Vibe Check</h3>
+                    <p>Pre-meeting intake captures mood, goals, and context.</p>
+                    <span class="feature-tag tag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-number">06</div>
+                    <div class="feature-icon-wrap"><i data-lucide="credit-card" style="width:24px;height:24px;color:var(--neon-yellow)"></i></div>
+                    <h3>Payments</h3>
+                    <p>Stripe, PayPal, crypto. Deposits or pay-what-you-want.</p>
+                    <span class="feature-tag tag-core">Core</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Demo -->
+    <section class="ai-section">
+        <div class="section-inner">
+            <div class="ai-grid">
+                <div>
+                    <div class="section-label">AI Engine</div>
+                    <h2 class="section-title" style="margin-bottom: 24px;">Your Schedule<br>On Autopilot</h2>
+                    <div class="diff-features">
+                        <div class="diff-item">
+                            <div class="diff-item-icon"><i data-lucide="battery-charging" style="width:18px;height:18px;"></i></div>
+                            <div><h4>Energy Scheduling</h4><p>Maps meeting types to your peak and low energy windows.</p></div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-item-icon"><i data-lucide="shield" style="width:18px;height:18px;"></i></div>
+                            <div><h4>Fatigue Shield</h4><p>Detects overbooked days. Suggests rescheduling before burnout.</p></div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-item-icon"><i data-lucide="database" style="width:18px;height:18px;"></i></div>
+                            <div><h4>Client Memory</h4><p>Total recall of every interaction. Auto-surfaced before calls.</p></div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-item-icon"><i data-lucide="refresh-cw" style="width:18px;height:18px;"></i></div>
+                            <div><h4>Smart Reschedule</h4><p>One-click optimal reschedule when clients cancel.</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-terminal">
+                    <div class="ai-label">// Llamame AI</div>
+                    <div class="ai-msg-bot">Detected: 6 meetings tomorrow, 0 breaks. Recommend adding buffer time?</div>
+                    <div class="ai-msg-user">move non-urgent to thursday</div>
+                    <div class="ai-msg-bot">Done. Moved 2 check-ins to Thursday PM (their preferred slot). Tomorrow now has 30-min buffers between deep-work sessions.</div>
+                    <div class="ai-msg-bot">Energy score updated: <span style="color: var(--neon-pink)">32</span> &rarr; <span style="color: var(--neon-green)">78</span></div>
+                    <div class="ai-msg-user">brief me on the strategy call with alex</div>
+                    <div class="ai-msg-bot">Alex Chen // TechFlow Inc<br>Meeting #4 // Last: Jan 22 (Q1 Roadmap)<br>Key topics: budget reallocation, SEO timeline<br>Mood at last booking: Optimistic</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations -->
+    <section id="integrations">
+        <div class="section-inner">
+            <div class="section-label">Stack</div>
+            <h2 class="section-title">Plugs Into Everything</h2>
+            <p class="section-desc">One-click setup. Real-time sync. Zero config headaches.</p>
+            <div class="integ-grid">
+                <div class="integ-card"><div class="integ-icon-wrap"><i data-lucide="calendar" style="width:24px;height:24px;"></i></div><h4>Google Cal</h4><p>two-way sync</p></div>
+                <div class="integ-card"><div class="integ-icon-wrap"><i data-lucide="mail" style="width:24px;height:24px;"></i></div><h4>Outlook</h4><p>cal + email</p></div>
+                <div class="integ-card"><div class="integ-icon-wrap"><i data-lucide="video" style="width:24px;height:24px;"></i></div><h4>Zoom</h4><p>auto-create</p></div>
+                <div class="integ-card"><div class="integ-icon-wrap"><i data-lucide="monitor" style="width:24px;height:24px;"></i></div><h4>Meet</h4><p>auto-link</p></div>
+                <div class="integ-card"><div class="integ-icon-wrap"><i data-lucide="credit-card" style="width:24px;height:24px;"></i></div><h4>Stripe</h4><p>payments</p></div>
+                <div class="integ-card"><div class="integ-icon-wrap"><i data-lucide="smartphone" style="width:24px;height:24px;"></i></div><h4>WhatsApp</h4><p>chat-book</p></div>
+                <div class="integ-card"><div class="integ-icon-wrap"><i data-lucide="hash" style="width:24px;height:24px;"></i></div><h4>Slack</h4><p>notifs</p></div>
+                <div class="integ-card"><div class="integ-icon-wrap"><i data-lucide="zap" style="width:24px;height:24px;"></i></div><h4>Zapier</h4><p>5000+ apps</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing">
+        <div class="section-inner">
+            <div style="text-align: center; margin-bottom: 56px;">
+                <div class="section-label" style="display: block; text-align: center;">Pricing</div>
+                <h2 class="section-title">Simple. Transparent.</h2>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-tier">Free</div>
+                    <div class="pricing-price">$0<span>/mo</span></div>
+                    <p class="pricing-desc">Get started. No card required.</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">+</span> 1 event type</li>
+                        <li><span class="check">+</span> Google Calendar</li>
+                        <li><span class="check">+</span> Email notifications</li>
+                        <li><span class="check">+</span> Booking page</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline">Init Free</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="pricing-tier" style="margin-top: 20px;">Pro</div>
+                    <div class="pricing-price">$12<span>/mo</span></div>
+                    <p class="pricing-desc">Full AI + all integrations.</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">+</span> Unlimited events</li>
+                        <li><span class="check">+</span> AI Briefs & Memory</li>
+                        <li><span class="check">+</span> All integrations</li>
+                        <li><span class="check">+</span> WhatsApp bot</li>
+                        <li><span class="check">+</span> Payments</li>
+                        <li><span class="check">+</span> Vibe Check</li>
+                        <li><span class="check">+</span> Energy scheduling</li>
+                    </ul>
+                    <a href="#" class="btn btn-neon">Deploy Pro</a>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-tier">Team</div>
+                    <div class="pricing-price">$24<span>/seat</span></div>
+                    <p class="pricing-desc">Round-robin. Analytics. API.</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">+</span> Everything in Pro</li>
+                        <li><span class="check">+</span> Team scheduling</li>
+                        <li><span class="check">+</span> Client Intelligence</li>
+                        <li><span class="check">+</span> API access</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline">Contact</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="section-inner">
+            <div class="cta-box">
+                <h2>Ready to Deploy?</h2>
+                <p>2 minutes to setup. Zero config required.</p>
+                <a href="booking.html" class="btn btn-neon"><i data-lucide="rocket" style="width:16px;height:16px;"></i> Launch Now</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-brand"><div class="logo">Llamame</div><p>Intelligent scheduling infrastructure for professionals.</p></div>
+            <div class="footer-col"><h4>Product</h4><ul><li><a href="#">Features</a></li><li><a href="#">Integrations</a></li><li><a href="#">Pricing</a></li><li><a href="#">API</a></li></ul></div>
+            <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li></ul></div>
+            <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li><li><a href="#">Security</a></li></ul></div>
+        </div>
+        <div class="footer-bottom">// &copy; 2026 Llamame by MantaRay Digital // All rights reserved</div>
+    </footer>
+
+    <div class="mockup-nav">
+        <a href="index.html">OG</a>
+        <a href="variant-aurora.html">Aurora</a>
+        <a href="variant-neon.html" class="active">Neon</a>
+        <a href="variant-luxe.html">Luxe</a>
+        <a href="variant-pro.html">Pro</a>
+    </div>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>
