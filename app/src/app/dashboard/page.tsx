@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -8,6 +9,8 @@ import {
   Sparkles,
   TrendingUp,
   TrendingDown,
+  RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { btn, card, statusStyles as themeStatusStyles, colorToBg, locationLabels as themeLocationLabels, currencyFormatter, toggle } from "@/lib/theme";
 import type { MeetingListItem, EventType, ClientListItem } from "@/lib/types";
@@ -26,7 +29,36 @@ import {
   demoClients,
   isConvexConnected,
 } from "@/lib/data";
+import {
+  generateMeetingBrief,
+  analyzeVibeCheck,
+  type MeetingBrief,
+} from "@/lib/ai";
+import { getEnergyForTime, checkFatigue, type FatigueWarning } from "@/lib/scheduling";
+import RescheduleModal from "@/components/RescheduleModal";
 
+/** Dynamic greeting based on time of day */
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+/** Format a Date to e.g. "Thursday, February 6, 2026" */
+function formatDate(d: Date): string {
+  return d.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+/** Short date label like "Feb 6" */
+function shortDate(d: Date): string {
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 export default function DashboardPage() {
   // Convex hooks (fall back to demo data when not connected)
@@ -35,6 +67,67 @@ export default function DashboardPage() {
   const tomorrowMeetings: MeetingListItem[] = isConvexConnected ? useTomorrowMeetings(demoUser.id) : demoTomorrowMeetings;
   const eventTypes = useEventTypes(isConvexConnected ? demoUser.id : undefined) as EventType[];
   const clients = useClients(isConvexConnected ? demoUser.id : undefined) as ClientListItem[];
+
+  // Dynamic date
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const greeting = getGreeting();
+  const todayLabel = formatDate(now);
+  const todayShort = shortDate(now);
+  const tomorrowShort = shortDate(tomorrow);
+
+  // AI Brief state
+  const [aiBrief, setAiBrief] = useState<MeetingBrief | null>(null);
+  const [aiInsight, setAiInsight] = useState<string>(demoAiInsight);
+
+  // Reschedule modal state
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [rescheduleMeeting, setRescheduleMeeting] = useState<MeetingListItem | null>(null);
+
+  // Fatigue warnings
+  const [fatigueWarnings, setFatigueWarnings] = useState<FatigueWarning[]>([]);
+
+  // Generate AI brief for the next meeting
+  useEffect(() => {
+    const nextMeeting = todayMeetings[0];
+    if (!nextMeeting) return;
+    generateMeetingBrief({
+      clientName: nextMeeting.client,
+      clientEmail: "",
+      eventType: nextMeeting.title,
+      meetingNumber: 3,
+      lastVibeCheck: "Excited",
+    }).then(setAiBrief);
+  }, [todayMeetings]);
+
+  // Check fatigue
+  useEffect(() => {
+    const warnings = checkFatigue({ meetings: todayMeetings });
+    setFatigueWarnings(warnings);
+  }, [todayMeetings]);
+
+  const handleReschedule = useCallback((meeting: MeetingListItem) => {
+    setRescheduleMeeting(meeting);
+    setRescheduleOpen(true);
+  }, []);
+
+  const handleRescheduleConfirm = useCallback(
+    (_newTime: string, _newDate: string, _reason: string) => {
+      setRescheduleOpen(false);
+      setRescheduleMeeting(null);
+    },
+    []
+  );
+
+  const briefData = aiBrief ?? {
+    summary: demoAiBrief.summary,
+    suggestedTopics: demoAiBrief.suggestedTopics,
+    clientInsight: "",
+    preparationTips: [],
+  };
+  const briefClientName = aiBrief ? todayMeetings[0]?.client?.split(" ")[0] ?? "Client" : demoAiBrief.clientName;
+  const briefCompany = aiBrief ? todayMeetings[0]?.company ?? "" : demoAiBrief.clientCompany;
 
   const stats = [
     {
@@ -65,11 +158,10 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Good morning
+            {greeting}
           </h1>
-          {/* TODO: Date will come from Date() in production */}
           <p className="text-text-sec text-sm mt-1">
-            Thursday, February 6, 2026 &middot; {todayMeetings.length} meetings today
+            {todayLabel} &middot; {todayMeetings.length} meetings today
           </p>
         </div>
         <div className="flex gap-3 items-center">
@@ -94,7 +186,7 @@ export default function DashboardPage() {
         <div className="flex-1">
           <strong className="text-sm block mb-0.5">AI Insight</strong>
           <p className="text-sm text-text-sec">
-            {demoAiInsight}
+            {aiInsight}
           </p>
         </div>
         <button className="px-4 py-2 rounded-lg text-xs font-semibold bg-white/[0.03] text-text border border-border hover:bg-bg-card-hover transition shrink-0">
@@ -159,8 +251,22 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-2">
+            {/* Fatigue warnings */}
+            {fatigueWarnings.length > 0 && (
+              <div className="mx-2 mb-2 p-3 rounded-lg bg-amber/[0.08] border border-amber/15">
+                <div className="flex items-center gap-2 text-xs font-semibold text-amber mb-1">
+                  <AlertTriangle className="w-3 h-3" /> Schedule Warning
+                </div>
+                {fatigueWarnings.map((w, i) => (
+                  <p key={i} className="text-xs text-text-sec">
+                    {w.message} <span className="text-text-muted">{w.suggestion}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+
             <div className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider">
-              Today &middot; Feb 6
+              Today &middot; {todayShort}
             </div>
 
             {/* AI Brief */}
@@ -170,12 +276,12 @@ export default function DashboardPage() {
               </div>
               <p className="text-sm text-text-sec leading-relaxed">
                 <strong className="text-text">
-                  {demoAiBrief.clientName} from {demoAiBrief.clientCompany}
+                  {briefClientName} from {briefCompany}
                 </strong>{" "}
-                &mdash; {demoAiBrief.summary}
+                &mdash; {briefData.summary}
               </p>
               <ul className="mt-2 space-y-0.5">
-                {demoAiBrief.suggestedTopics.map((item) => (
+                {briefData.suggestedTopics.map((item) => (
                   <li
                     key={item}
                     className="text-sm text-text-sec flex items-center gap-2"
@@ -184,14 +290,23 @@ export default function DashboardPage() {
                   </li>
                 ))}
               </ul>
+              {briefData.preparationTips.length > 0 && (
+                <div className="mt-3 pt-2 border-t border-violet/10">
+                  <div className="text-xs font-semibold text-violet mb-1">Prep Tips</div>
+                  {briefData.preparationTips.map((tip) => (
+                    <p key={tip} className="text-xs text-text-muted">&bull; {tip}</p>
+                  ))}
+                </div>
+              )}
             </div>
 
             {todayMeetings.map((m) => {
               const status = themeStatusStyles[m.status] ?? themeStatusStyles.pending;
+              const energy = getEnergyForTime(m.time);
               return (
                 <div
                   key={m.id}
-                  className="flex items-center gap-3.5 px-3 py-3.5 rounded-lg hover:bg-white/[0.03] cursor-pointer transition"
+                  className="flex items-center gap-3.5 px-3 py-3.5 rounded-lg hover:bg-white/[0.03] cursor-pointer transition group"
                 >
                   <div className="text-center min-w-[54px]">
                     <div className="text-sm font-semibold">{m.time}</div>
@@ -199,15 +314,25 @@ export default function DashboardPage() {
                       {m.duration}
                     </div>
                   </div>
-                  <div
-                    className={`w-[3px] h-10 rounded-sm shrink-0 ${m.color}`}
-                  />
+                  <div className="flex flex-col items-center gap-0.5 shrink-0">
+                    <div
+                      className={`w-[3px] h-7 rounded-sm ${m.color}`}
+                    />
+                    <div className={`w-1.5 h-1.5 rounded-full ${energy.color}`} title={energy.label} />
+                  </div>
                   <div className="flex-1">
                     <div className="text-sm font-semibold">{m.title}</div>
                     <div className="text-xs text-text-sec">
                       {m.client} &middot; {m.company}
                     </div>
                   </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleReschedule(m); }}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-white/[0.06] text-text-muted hover:text-text transition"
+                    title="Reschedule"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
                   <span
                     className={`px-2.5 py-1 rounded-full text-[0.7rem] font-semibold ${status.className}`}
                   >
@@ -218,7 +343,7 @@ export default function DashboardPage() {
             })}
 
             <div className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider mt-2">
-              Tomorrow &middot; Feb 7
+              Tomorrow &middot; {tomorrowShort}
             </div>
 
             {tomorrowMeetings.map((m) => {
@@ -226,7 +351,7 @@ export default function DashboardPage() {
               return (
                 <div
                   key={m.id}
-                  className="flex items-center gap-3.5 px-3 py-3.5 rounded-lg hover:bg-white/[0.03] cursor-pointer transition"
+                  className="flex items-center gap-3.5 px-3 py-3.5 rounded-lg hover:bg-white/[0.03] cursor-pointer transition group"
                 >
                   <div className="text-center min-w-[54px]">
                     <div className="text-sm font-semibold">{m.time}</div>
@@ -243,6 +368,13 @@ export default function DashboardPage() {
                       {m.client} &middot; {m.company}
                     </div>
                   </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleReschedule(m); }}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-white/[0.06] text-text-muted hover:text-text transition"
+                    title="Reschedule"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </button>
                   <span
                     className={`px-2.5 py-1 rounded-full text-[0.7rem] font-semibold ${status.className}`}
                   >
@@ -338,6 +470,20 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Reschedule Modal */}
+      {rescheduleMeeting && (
+        <RescheduleModal
+          open={rescheduleOpen}
+          onClose={() => { setRescheduleOpen(false); setRescheduleMeeting(null); }}
+          onReschedule={handleRescheduleConfirm}
+          bookingId={rescheduleMeeting.id}
+          currentDate={todayLabel}
+          currentTime={rescheduleMeeting.time}
+          clientName={rescheduleMeeting.client}
+          eventTitle={rescheduleMeeting.title}
+        />
+      )}
     </>
   );
 }

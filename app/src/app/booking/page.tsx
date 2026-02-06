@@ -20,6 +20,9 @@ import { appConfig, timezones, vibeCheckMoods } from "@/lib/config";
 import { demoUser, demoEventTypes } from "@/lib/data";
 import { btn, input as inputStyles, locationLabels as locationLabelMap, currencyFormatter } from "@/lib/theme";
 import { generateSlots, getAvailableDates } from "@/lib/slots";
+import { getEnergyForTime, type EnergySlotInfo } from "@/lib/scheduling";
+import { analyzeVibeCheck, type VibeAnalysis } from "@/lib/ai";
+import RescheduleModal from "@/components/RescheduleModal";
 
 /** The event type used on this booking page (Strategy Session). */
 const eventType = demoEventTypes[1];
@@ -50,6 +53,8 @@ export default function BookingPage() {
     goal: "",
     context: "",
   });
+  const [vibeAnalysis, setVibeAnalysis] = useState<VibeAnalysis | null>(null);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
   // Generate available dates for the current month
   const availableDates = useMemo(
@@ -312,31 +317,46 @@ export default function BookingPage() {
                       <p className="text-sm text-text-muted">No available times</p>
                     </div>
                   )}
+                  {selectedDay && timeSlots.length > 0 && (
+                    <div className="flex items-center gap-3 text-[0.65rem] text-text-muted mb-2">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green" /> Peak</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-accent" /> Focus</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber" /> Moderate</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose" /> Low</span>
+                    </div>
+                  )}
                   <div className="flex flex-col gap-1.5 max-h-[340px] overflow-y-auto">
-                    {timeSlots.map((slot) => (
-                      <div
-                        key={slot.time}
-                        onClick={() => setSelectedTime(slot.time)}
-                        className={`px-3.5 py-2.5 rounded-lg text-sm font-medium border cursor-pointer transition flex items-center justify-between ${
-                          selectedTime === slot.time
-                            ? "bg-gradient-to-r from-accent to-violet border-transparent text-white"
-                            : "border-border bg-white/[0.03] text-text-sec hover:border-accent hover:text-accent"
-                        }`}
-                      >
-                        {slot.label}
-                        {selectedTime === slot.time && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setStep(eventType.requiresVibeCheck ? 3 : 4);
-                            }}
-                            className="px-3 py-1 rounded-full bg-white text-accent text-xs font-semibold"
-                          >
-                            Confirm
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                    {timeSlots.map((slot) => {
+                      const energy = getEnergyForTime(slot.time);
+                      return (
+                        <div
+                          key={slot.time}
+                          onClick={() => setSelectedTime(slot.time)}
+                          className={`px-3.5 py-2.5 rounded-lg text-sm font-medium border cursor-pointer transition flex items-center justify-between ${
+                            selectedTime === slot.time
+                              ? "bg-gradient-to-r from-accent to-violet border-transparent text-white"
+                              : "border-border bg-white/[0.03] text-text-sec hover:border-accent hover:text-accent"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${energy.color}`} />
+                            {slot.label}
+                            <span className="text-[0.65rem] text-text-muted">{energy.label}</span>
+                          </div>
+                          {selectedTime === slot.time && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setStep(eventType.requiresVibeCheck ? 3 : 4);
+                              }}
+                              className="px-3 py-1 rounded-full bg-white text-accent text-xs font-semibold"
+                            >
+                              Confirm
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -427,7 +447,20 @@ export default function BookingPage() {
               </div>
 
               <div className="flex gap-3 mt-4">
-                <button onClick={() => setStep(4)} className={btn.primary}>
+                <button
+                  onClick={async () => {
+                    const analysis = await analyzeVibeCheck({
+                      mood: selectedMood,
+                      goal: bookingForm.goal,
+                      context: bookingForm.context,
+                      clientName: bookingForm.name,
+                      eventType: eventType.title,
+                    });
+                    setVibeAnalysis(analysis);
+                    setStep(4);
+                  }}
+                  className={btn.primary}
+                >
                   Confirm Booking <ArrowRight className="w-4 h-4" />
                 </button>
                 <button onClick={() => setStep(2)} className={btn.secondary}>
@@ -466,10 +499,47 @@ export default function BookingPage() {
               )}
             </div>
 
+            {/* Vibe Analysis Insights */}
+            {vibeAnalysis && (
+              <div className="inline-flex flex-col gap-2 text-left bg-violet-muted/50 border border-violet/15 rounded-xl p-5 mb-4 max-w-md">
+                <div className="flex items-center gap-2 text-xs font-semibold text-violet">
+                  <Sparkles className="w-3 h-3" /> Meeting Prep Insights
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    vibeAnalysis.sentiment === "positive"
+                      ? "bg-green-muted text-green"
+                      : vibeAnalysis.sentiment === "negative"
+                        ? "bg-rose-muted text-rose"
+                        : "bg-amber-muted text-amber"
+                  }`}>
+                    {vibeAnalysis.sentiment}
+                  </span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    vibeAnalysis.urgency === "high"
+                      ? "bg-rose-muted text-rose"
+                      : vibeAnalysis.urgency === "medium"
+                        ? "bg-amber-muted text-amber"
+                        : "bg-green-muted text-green"
+                  }`}>
+                    {vibeAnalysis.urgency} urgency
+                  </span>
+                </div>
+                <p className="text-sm text-text-sec">{vibeAnalysis.suggestedApproach}</p>
+                <ul className="space-y-1">
+                  {vibeAnalysis.talkingPoints.map((tp) => (
+                    <li key={tp} className="text-xs text-text-muted flex items-center gap-1.5">
+                      <span className="text-violet">&gt;</span> {tp}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Reschedule / Cancel options */}
             <div className="flex items-center justify-center gap-4 mb-6">
               <button
-                onClick={() => { setStep(2); setSelectedTime(null); }}
+                onClick={() => setRescheduleOpen(true)}
                 className={btn.ghost}
               >
                 <RefreshCw className="w-4 h-4" /> Reschedule
@@ -496,6 +566,20 @@ export default function BookingPage() {
           &middot; Smart scheduling for professionals
         </div>
       </div>
+
+      <RescheduleModal
+        open={rescheduleOpen}
+        onClose={() => setRescheduleOpen(false)}
+        onReschedule={(newTime, newDate, reason) => {
+          setSelectedTime(newTime);
+          setRescheduleOpen(false);
+        }}
+        bookingId="booking_demo"
+        currentDate={selectedDateStr}
+        currentTime={selectedTime ?? ""}
+        clientName={bookingForm.name || "Guest"}
+        eventTitle={eventType.title}
+      />
     </div>
   );
 }

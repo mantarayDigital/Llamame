@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   Home,
@@ -11,15 +14,13 @@ import {
   CreditCard,
   FileText,
   Settings,
+  Menu,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { appConfig } from "@/lib/config";
-import { SIDEBAR_W } from "@/lib/theme";
 import { dashboardNav } from "@/lib/navigation";
 import { demoUser } from "@/lib/demo-data";
-import MobileNav from "@/components/MobileNav";
-// Layout stays a server component — uses static demo data for sidebar.
-// When auth is added, user info will come from session/cookie, not hooks.
 
 /** Map icon name strings from dashboardNav to actual Lucide components */
 const iconMap: Record<string, LucideIcon> = {
@@ -36,30 +37,61 @@ const iconMap: Record<string, LucideIcon> = {
   Settings,
 };
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex min-h-screen">
-      <MobileNav />
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-bg-raised border-r border-border hidden lg:flex flex-col px-4 py-6 z-50">
-        <Link
-          href="/"
-          className="text-xl font-bold px-3 mb-8"
-        >
-          {appConfig.logoPrefix}
-          <span className="text-accent">{appConfig.logoAccent}</span>
-        </Link>
+export default function MobileNav() {
+  const [open, setOpen] = useState(false);
 
+  return (
+    <>
+      {/* Hamburger button -- visible only on mobile */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="fixed top-4 left-4 z-50 lg:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-bg-raised border border-border text-text-sec hover:text-text transition"
+        aria-label="Open navigation menu"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Backdrop overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Slide-out sidebar */}
+      <div
+        className={`fixed top-0 left-0 bottom-0 z-50 w-[260px] bg-bg-raised border-r border-border flex flex-col px-4 py-6 transition-transform duration-300 ease-in-out lg:hidden ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Header: logo + close button */}
+        <div className="flex items-center justify-between mb-8">
+          <Link
+            href="/"
+            className="text-xl font-bold px-3"
+            onClick={() => setOpen(false)}
+          >
+            {appConfig.logoPrefix}
+            <span className="text-accent">{appConfig.logoAccent}</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-text-sec hover:text-text transition"
+            aria-label="Close navigation menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Nav items */}
         <nav className="flex flex-col gap-1 flex-1">
           {dashboardNav.map((group, gi) => (
             <div key={gi}>
-              {gi > 0 && (
-                <div className="h-px bg-border my-3" />
-              )}
+              {gi > 0 && <div className="h-px bg-border my-3" />}
               {group.items.map((item) => {
                 const Icon = iconMap[item.icon];
                 if (item.comingSoon) {
@@ -82,6 +114,7 @@ export default function DashboardLayout({
                   <Link
                     key={item.label}
                     href={item.href}
+                    onClick={() => setOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
                       item.href === "/dashboard"
                         ? "bg-accent-muted text-text border border-accent/20"
@@ -102,6 +135,7 @@ export default function DashboardLayout({
           ))}
         </nav>
 
+        {/* User avatar section at bottom */}
         <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-white/[0.03]">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-violet flex items-center justify-center font-bold text-xs shrink-0">
             {demoUser.name.charAt(0)}
@@ -115,10 +149,7 @@ export default function DashboardLayout({
             </span>
           </div>
         </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="lg:ml-[260px] flex-1 p-4 lg:p-8">{children}</main>
-    </div>
+      </div>
+    </>
   );
 }
