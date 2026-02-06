@@ -16,11 +16,16 @@ import { appConfig, defaults, timezones } from "@/lib/config";
 import { settingsTabs } from "@/lib/navigation";
 import { integrations } from "@/lib/integrations";
 import {
+  useUpdateProfile,
+  useUpdateBranding,
+  useUpdateNotificationPrefs,
+  useUpdateEnergyProfile,
   demoUser,
   demoEnergyBlocks,
   demoNotificationPrefs,
   demoConnectedIntegrations,
-} from "@/lib/demo-data";
+  isConvexConnected,
+} from "@/lib/data";
 
 /** Map icon name strings from settingsTabs to actual Lucide components */
 const iconMap: Record<string, LucideIcon> = {

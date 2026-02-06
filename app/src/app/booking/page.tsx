@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { appConfig, timezones, vibeCheckMoods, locationTypes } from "@/lib/config";
-import { demoUser, demoEventTypes, demoTimeSlots } from "@/lib/demo-data";
+import { useCreateBooking, demoUser, demoEventTypes, demoTimeSlots, isConvexConnected } from "@/lib/data";
 
 /** The event type used on this booking page (Strategy Session). */
 const eventType = demoEventTypes[1];

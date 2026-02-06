@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { appConfig } from "@/lib/config";
-import { demoUser, demoEventTypes } from "@/lib/demo-data";
+import { useUserByHandle, useActiveEventTypes, demoEventTypes, isConvexConnected } from "@/lib/data";
+import type { EventType } from "@/lib/types";
 import { Clock, Video, Phone, Monitor, MapPin, LinkIcon } from "lucide-react";
 
 /**
  * Public booking page for a user/org.
  * URL: /{handle}
  *
- * In production, this fetches the user by handle from Convex,
- * loads their active event types, and applies their branding.
- * Currently uses demo data as a placeholder.
+ * Fetches the user by handle from Convex and loads their active event types.
+ * Falls back to demo data when Convex isn't connected.
  */
 
 const locationIcons: Record<string, React.ElementType> = {
@@ -35,11 +35,16 @@ export default function PublicBookingPage() {
   const params = useParams<{ handle: string }>();
   const handle = params.handle;
 
-  // TODO: Replace with Convex query: useQuery(api.users.getByHandle, { handle })
-  const user = handle === demoUser.handle ? demoUser : null;
-  const eventTypes = user
-    ? demoEventTypes.filter((et) => et.isActive)
-    : [];
+  const user = useUserByHandle(handle);
+  const liveEvents = useActiveEventTypes(
+    isConvexConnected && user ? (user as any)._id ?? user.id : undefined
+  );
+  const eventTypes: EventType[] =
+    isConvexConnected && liveEvents.length > 0
+      ? liveEvents
+      : user
+        ? demoEventTypes.filter((et) => et.isActive)
+        : [];
 
   if (!user) {
     return (

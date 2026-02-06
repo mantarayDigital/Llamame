@@ -14,6 +14,8 @@ import {
 import { appConfig } from "@/lib/config";
 import { dashboardNav } from "@/lib/navigation";
 import { demoUser } from "@/lib/demo-data";
+// Layout stays a server component — uses static demo data for sidebar.
+// When auth is added, user info will come from session/cookie, not hooks.
 
 /** Map icon name strings from dashboardNav to actual Lucide components */
 const iconMap: Record<string, LucideIcon> = {

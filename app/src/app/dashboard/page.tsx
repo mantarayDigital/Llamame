@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Plus,
@@ -8,15 +10,22 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { defaults } from "@/lib/config";
+import type { MeetingListItem, EventType, ClientListItem } from "@/lib/types";
 import {
-  demoDashboardStats,
-  demoTodayMeetings,
-  demoTomorrowMeetings,
+  useDashboardStats,
+  useTodayMeetings,
+  useTomorrowMeetings,
+  useEventTypes,
+  useClients,
   demoAiBrief,
   demoAiInsight,
-  demoClients,
+  demoUser,
+  demoTodayMeetings,
+  demoTomorrowMeetings,
   demoEventTypes,
-} from "@/lib/demo-data";
+  demoClients,
+  isConvexConnected,
+} from "@/lib/data";
 
 /** Format currency using config defaults */
 const revenueFormatter = new Intl.NumberFormat(defaults.locale, {
@@ -50,31 +59,37 @@ const statusStyles: Record<string, { label: string; className: string }> = {
   cancelled: { label: "Cancelled", className: "bg-rose-muted text-rose" },
 };
 
-const stats = [
-  {
-    label: "Meetings This Week",
-    value: String(demoDashboardStats.meetingsThisWeek),
-    change: `+${demoDashboardStats.meetingsChange}%`,
-    changeLabel: "vs last week",
-    up: demoDashboardStats.meetingsChange >= 0,
-  },
-  {
-    label: "Revenue Collected",
-    value: revenueFormatter.format(demoDashboardStats.revenueCollected),
-    change: `+${demoDashboardStats.revenueChange}%`,
-    changeLabel: "vs last week",
-    up: demoDashboardStats.revenueChange >= 0,
-  },
-  {
-    label: "Show Rate",
-    value: `${demoDashboardStats.showRate}%`,
-    change: `+${demoDashboardStats.showRateChange}%`,
-    changeLabel: "improvement",
-    up: demoDashboardStats.showRateChange >= 0,
-  },
-];
-
 export default function DashboardPage() {
+  // Convex hooks (fall back to demo data when not connected)
+  const dashboardStats = useDashboardStats(isConvexConnected ? demoUser.id : undefined);
+  const todayMeetings: MeetingListItem[] = isConvexConnected ? useTodayMeetings(demoUser.id) : demoTodayMeetings;
+  const tomorrowMeetings: MeetingListItem[] = isConvexConnected ? useTomorrowMeetings(demoUser.id) : demoTomorrowMeetings;
+  const eventTypes = useEventTypes(isConvexConnected ? demoUser.id : undefined) as EventType[];
+  const clients = useClients(isConvexConnected ? demoUser.id : undefined) as ClientListItem[];
+
+  const stats = [
+    {
+      label: "Meetings This Week",
+      value: String(dashboardStats.meetingsThisWeek),
+      change: `+${dashboardStats.meetingsChange}%`,
+      changeLabel: "vs last week",
+      up: dashboardStats.meetingsChange >= 0,
+    },
+    {
+      label: "Revenue Collected",
+      value: revenueFormatter.format(dashboardStats.revenueCollected),
+      change: `+${dashboardStats.revenueChange}%`,
+      changeLabel: "vs last week",
+      up: dashboardStats.revenueChange >= 0,
+    },
+    {
+      label: "Show Rate",
+      value: `${dashboardStats.showRate}%`,
+      change: `+${dashboardStats.showRateChange}%`,
+      changeLabel: "improvement",
+      up: dashboardStats.showRateChange >= 0,
+    },
+  ];
   return (
     <>
       {/* Header */}
@@ -85,7 +100,7 @@ export default function DashboardPage() {
           </h1>
           {/* TODO: Date will come from Date() in production */}
           <p className="text-text-sec text-sm mt-1">
-            Thursday, February 6, 2026 &middot; {demoTodayMeetings.length} meetings today
+            Thursday, February 6, 2026 &middot; {todayMeetings.length} meetings today
           </p>
         </div>
         <div className="flex gap-3 items-center">
@@ -151,13 +166,13 @@ export default function DashboardPage() {
             </span>
             <div className="text-3xl font-bold flex items-center gap-2">
               <span className="text-green text-sm">&#9679;</span>{" "}
-              {demoDashboardStats.energyScore}
+              {dashboardStats.energyScore}
             </div>
           </div>
           <div className="h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-violet to-accent"
-              style={{ width: `${demoDashboardStats.energyScore}%` }}
+              style={{ width: `${dashboardStats.energyScore}%` }}
             />
           </div>
         </div>
@@ -202,7 +217,7 @@ export default function DashboardPage() {
               </ul>
             </div>
 
-            {demoTodayMeetings.map((m) => {
+            {todayMeetings.map((m) => {
               const status = statusStyles[m.status] ?? statusStyles.pending;
               return (
                 <div
@@ -237,7 +252,7 @@ export default function DashboardPage() {
               Tomorrow &middot; Feb 7
             </div>
 
-            {demoTomorrowMeetings.map((m) => {
+            {tomorrowMeetings.map((m) => {
               const status = statusStyles[m.status] ?? statusStyles.pending;
               return (
                 <div
@@ -284,7 +299,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="p-3">
-              {demoEventTypes.map((et) => {
+              {eventTypes.map((et) => {
                 const bgColor = colorBgMap[et.color] ?? "bg-accent";
                 const locationLabel =
                   locationLabels[et.location] ?? et.location;
@@ -333,7 +348,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="p-4">
-              {demoClients.map((c) => (
+              {clients.map((c) => (
                 <div
                   key={c.id}
                   className="flex items-center gap-3 py-2.5 border-b border-border last:border-b-0"

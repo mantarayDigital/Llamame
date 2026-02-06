@@ -18,7 +18,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { appConfig } from "@/lib/config";
-import { demoUser, demoEventTypes } from "@/lib/demo-data";
+import type { EventType } from "@/lib/types";
+import { useEventTypes, useToggleEventType, demoUser, isConvexConnected } from "@/lib/data";
 
 /** Map location type to Lucide icon component */
 const locationIconMap: Record<string, LucideIcon> = {
@@ -48,12 +49,21 @@ const colorBgMap: Record<string, string> = {
 };
 
 export default function EventTypesPage() {
-  const [events, setEvents] = useState(demoEventTypes);
+  const liveEvents = useEventTypes(isConvexConnected ? demoUser.id : undefined) as EventType[];
+  const [localEvents, setLocalEvents] = useState<EventType[]>(liveEvents);
+  const toggleMutation = useToggleEventType();
 
-  const toggleActive = (id: string) => {
-    setEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, isActive: !e.isActive } : e))
-    );
+  // Keep local state in sync with Convex data
+  const events: EventType[] = isConvexConnected ? liveEvents : localEvents;
+
+  const toggleActive = async (id: string) => {
+    if (isConvexConnected) {
+      await toggleMutation({ id: id as any });
+    } else {
+      setLocalEvents((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, isActive: !e.isActive } : e))
+      );
+    }
   };
 
   return (

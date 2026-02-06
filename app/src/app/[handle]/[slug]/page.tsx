@@ -3,30 +3,24 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { appConfig } from "@/lib/config";
-import { demoUser, demoEventTypes } from "@/lib/demo-data";
+import { useUserByHandle, useEventTypeBySlug, demoEventTypes, isConvexConnected } from "@/lib/data";
 
 /**
  * Direct event type booking page.
  * URL: /{handle}/{slug}
  *
- * In production, this fetches the event type by handle + slug,
- * generates available time slots from availability rules,
- * and renders the full booking flow.
- *
- * Currently redirects to the main booking page as a placeholder.
- * The full booking flow in /booking will be refactored to accept
- * handle + slug params and load data dynamically.
+ * Fetches the event type by handle + slug from Convex.
+ * Falls back to demo data when Convex isn't connected.
  */
 
 export default function EventBookingPage() {
   const params = useParams<{ handle: string; slug: string }>();
 
-  // TODO: Replace with Convex queries
-  const user =
-    params.handle === demoUser.handle ? demoUser : null;
-  const eventType = user
-    ? demoEventTypes.find((et) => et.slug === params.slug && et.isActive)
-    : null;
+  const user = useUserByHandle(params.handle);
+  const liveEventType = useEventTypeBySlug(params.slug);
+  const eventType =
+    liveEventType ??
+    (user ? demoEventTypes.find((et) => et.slug === params.slug && et.isActive) : null);
 
   if (!user || !eventType) {
     return (
