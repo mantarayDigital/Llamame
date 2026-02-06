@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
   Sparkles,
@@ -34,6 +35,42 @@ import {
   Check,
 } from "lucide-react";
 
+import { appConfig } from "@/lib/config";
+import { plans } from "@/lib/plans";
+import { integrations } from "@/lib/integrations";
+import { demoTestimonials, demoLandingStats } from "@/lib/demo-data";
+import { marketingNav, footerNav } from "@/lib/navigation";
+
+// ── Icon lookup for integration definitions (icon field is a string) ──
+const iconMap: Record<string, LucideIcon> = {
+  Calendar,
+  Mail,
+  Video,
+  Monitor,
+  CreditCard,
+  Smartphone,
+  Hash,
+  Database,
+  Send,
+  FileText,
+  Zap,
+  Wallet,
+};
+
+// ── Pricing plans for the landing page (exclude enterprise / custom pricing) ──
+const pricingPlans = plans
+  .filter((p) => p.price !== -1)
+  .map((p) => ({
+    tier: p.tier,
+    price: p.price === 0 ? "$0" : `$${p.price}`,
+    unit: p.billingUnit,
+    desc: p.description,
+    features: p.features,
+    cta: p.ctaLabel,
+    featured: p.featured,
+  }));
+
+// ── Feature cards — intentionally page-specific landing marketing copy ──
 const features = [
   {
     icon: CalendarCheck,
@@ -118,97 +155,6 @@ const features = [
   },
 ];
 
-const integrations = [
-  { icon: Calendar, name: "Google Calendar", sub: "two-way sync" },
-  { icon: Mail, name: "Outlook", sub: "cal + email" },
-  { icon: Video, name: "Zoom", sub: "auto-create" },
-  { icon: Monitor, name: "Google Meet", sub: "auto-link" },
-  { icon: CreditCard, name: "Stripe", sub: "payments" },
-  { icon: Smartphone, name: "WhatsApp", sub: "chat booking" },
-  { icon: Hash, name: "Slack", sub: "notifications" },
-  { icon: Database, name: "HubSpot", sub: "crm sync" },
-  { icon: Send, name: "Mailchimp", sub: "auto-lists" },
-  { icon: FileText, name: "Notion", sub: "meeting notes" },
-  { icon: Zap, name: "Zapier", sub: "5000+ apps" },
-  { icon: Wallet, name: "PayPal", sub: "payments" },
-];
-
-const pricingPlans = [
-  {
-    tier: "free",
-    price: "$0",
-    unit: "/mo",
-    desc: "For individuals getting started with smart scheduling.",
-    features: [
-      "1 event type",
-      "Google Calendar sync",
-      "Email notifications",
-      "Booking page",
-    ],
-    cta: "Get started",
-    featured: false,
-  },
-  {
-    tier: "pro",
-    price: "$12",
-    unit: "/mo",
-    desc: "AI scheduling, all integrations, and full customization.",
-    features: [
-      "Unlimited event types",
-      "AI Meeting Briefs",
-      "All integrations",
-      "WhatsApp booking bot",
-      "Payments + Vibe Check",
-      "Custom branding",
-      "Energy-aware scheduling",
-    ],
-    cta: "Start free trial",
-    featured: true,
-  },
-  {
-    tier: "team",
-    price: "$24",
-    unit: "/seat/mo",
-    desc: "Round-robin, collective booking, and team analytics.",
-    features: [
-      "Everything in Pro",
-      "Team scheduling",
-      "Client Intelligence dashboard",
-      "Advanced analytics",
-      "API access",
-    ],
-    cta: "Contact sales",
-    featured: false,
-  },
-];
-
-const testimonials = [
-  {
-    quote:
-      "The AI meeting briefs alone are worth it. I walk into every call knowing exactly what to discuss. My clients think I have superhuman memory.",
-    name: "Jamie Rodriguez",
-    role: "Business Coach",
-    initials: "JR",
-    gradient: "from-accent to-violet",
-  },
-  {
-    quote:
-      "WhatsApp booking changed everything for my Latin American clients. They don't want to visit a website — they want to text. Llamame gets it.",
-    name: "Ana Kovacs",
-    role: "Marketing Consultant",
-    initials: "AK",
-    gradient: "from-violet to-rose",
-  },
-  {
-    quote:
-      "Energy-aware scheduling is genius. No more back-to-back calls that leave me drained. My calendar finally works for me, not against me.",
-    name: "Lucas Sharma",
-    role: "UX Designer",
-    initials: "LS",
-    gradient: "from-green to-accent",
-  },
-];
-
 export default function LandingPage() {
   return (
     <>
@@ -244,27 +190,18 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 h-14 px-8 bg-bg/80 backdrop-blur-xl border-b border-border flex items-center">
         <div className="max-w-[1140px] w-full mx-auto flex items-center justify-between">
           <Link href="/" className="text-lg font-bold tracking-tight">
-            Llama<span className="text-accent">me</span>
+            {appConfig.logoPrefix}<span className="text-accent">{appConfig.logoAccent}</span>
           </Link>
           <div className="flex items-center gap-1">
-            <Link
-              href="#features"
-              className="px-3.5 py-1.5 rounded-md text-sm font-medium text-text-sec hover:text-text hover:bg-white/[0.03] transition"
-            >
-              Features
-            </Link>
-            <Link
-              href="#integrations"
-              className="px-3.5 py-1.5 rounded-md text-sm font-medium text-text-sec hover:text-text hover:bg-white/[0.03] transition"
-            >
-              Integrations
-            </Link>
-            <Link
-              href="#pricing"
-              className="px-3.5 py-1.5 rounded-md text-sm font-medium text-text-sec hover:text-text hover:bg-white/[0.03] transition"
-            >
-              Pricing
-            </Link>
+            {marketingNav.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="px-3.5 py-1.5 rounded-md text-sm font-medium text-text-sec hover:text-text hover:bg-white/[0.03] transition"
+              >
+                {item.label}
+              </Link>
+            ))}
             <Link
               href="/dashboard"
               className="px-3.5 py-1.5 rounded-md text-sm font-medium text-text-sec hover:text-text hover:bg-white/[0.03] transition"
@@ -351,16 +288,16 @@ export default function LandingPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-text-muted/30" />
             </div>
             <div className="flex-1 text-center font-mono text-xs text-text-muted px-3 py-1 bg-white/[0.03] rounded-md mr-12">
-              llamame.io/mantaray
+              {appConfig.domain}/mantaray
             </div>
           </div>
           <div className="grid grid-cols-[250px_1fr] min-h-[380px]">
             <div className="p-6 border-r border-border">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-accent to-violet flex items-center justify-center font-bold text-lg text-white mb-3">
-                M
+                {appConfig.company.charAt(0)}
               </div>
               <div className="font-bold text-[0.95rem] mb-0.5">
-                MantaRay Digital
+                {appConfig.company}
               </div>
               <div className="text-xs text-text-muted font-mono mb-5">
                 /mantaray
@@ -510,17 +447,12 @@ export default function LandingPage() {
       <section className="px-8 pb-24 relative z-[1]">
         <div className="max-w-[1140px] mx-auto">
           <div className="grid grid-cols-4 gap-px rounded-xl overflow-hidden border border-border">
-            {[
-              { val: "94%", label: "Show rate", color: "text-accent" },
-              { val: "2 min", label: "Setup time", color: "text-green" },
-              { val: "12+", label: "Integrations", color: "text-violet" },
-              { val: "4.9", label: "User rating", color: "text-amber" },
-            ].map((s) => (
+            {demoLandingStats.map((s) => (
               <div key={s.label} className="p-7 text-center bg-bg-card">
                 <div
                   className={`text-3xl font-extrabold tracking-tight mb-0.5 ${s.color}`}
                 >
-                  {s.val}
+                  {s.value}
                 </div>
                 <div className="text-sm text-text-muted font-medium">
                   {s.label}
@@ -591,7 +523,7 @@ export default function LandingPage() {
               <div className="p-5 flex flex-col gap-2">
                 <div className="p-3 px-4 rounded-xl bg-bg-raised border border-border rounded-bl-sm text-sm text-text-sec leading-relaxed max-w-[88%]">
                   <div className="flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-wider text-accent mb-1">
-                    <Sparkles className="w-2.5 h-2.5" /> Llamame
+                    <Sparkles className="w-2.5 h-2.5" /> {appConfig.name}
                   </div>
                   You have 6 meetings tomorrow with no breaks. Want me to
                   optimize your schedule?
@@ -601,7 +533,7 @@ export default function LandingPage() {
                 </div>
                 <div className="p-3 px-4 rounded-xl bg-bg-raised border border-border rounded-bl-sm text-sm text-text-sec leading-relaxed max-w-[88%]">
                   <div className="flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-wider text-accent mb-1">
-                    <Sparkles className="w-2.5 h-2.5" /> Llamame
+                    <Sparkles className="w-2.5 h-2.5" /> {appConfig.name}
                   </div>
                   Done. Moved 2 check-ins to Thursday afternoon (their preferred
                   time). Added 30-min buffers between deep-work sessions. Your
@@ -612,7 +544,7 @@ export default function LandingPage() {
                 </div>
                 <div className="p-3 px-4 rounded-xl bg-bg-raised border border-border rounded-bl-sm text-sm text-text-sec leading-relaxed max-w-[88%]">
                   <div className="flex items-center gap-1 text-[0.68rem] font-semibold uppercase tracking-wider text-accent mb-1">
-                    <Sparkles className="w-2.5 h-2.5" /> Llamame
+                    <Sparkles className="w-2.5 h-2.5" /> {appConfig.name}
                   </div>
                   <strong className="text-text">Alex Chen</strong> &middot;
                   TechFlow Inc &middot; Meeting #4
@@ -701,22 +633,25 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-6 gap-px rounded-xl overflow-hidden border border-border">
-            {integrations.map((int) => (
-              <div
-                key={int.name}
-                className="px-3 py-6 bg-bg-card text-center hover:bg-bg-card-hover transition"
-              >
-                <div className="flex items-center justify-center mx-auto mb-2 text-text-sec">
-                  <int.icon className="w-5 h-5" />
+            {integrations.map((integ) => {
+              const Icon = iconMap[integ.icon] ?? Plug;
+              return (
+                <div
+                  key={integ.name}
+                  className="px-3 py-6 bg-bg-card text-center hover:bg-bg-card-hover transition"
+                >
+                  <div className="flex items-center justify-center mx-auto mb-2 text-text-sec">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-[0.8rem] font-semibold mb-0.5">
+                    {integ.name}
+                  </h4>
+                  <p className="text-[0.68rem] text-text-muted font-mono">
+                    {integ.shortDesc}
+                  </p>
                 </div>
-                <h4 className="text-[0.8rem] font-semibold mb-0.5">
-                  {int.name}
-                </h4>
-                <p className="text-[0.68rem] text-text-muted font-mono">
-                  {int.sub}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -800,7 +735,7 @@ export default function LandingPage() {
             Loved by professionals
           </h2>
           <div className="grid grid-cols-3 gap-4 mt-12">
-            {testimonials.map((t) => (
+            {demoTestimonials.map((t) => (
               <div
                 key={t.name}
                 className="p-6 rounded-xl bg-bg-card border border-border text-left"
@@ -876,36 +811,25 @@ export default function LandingPage() {
         <div className="max-w-[1140px] mx-auto grid grid-cols-[2fr_repeat(3,1fr)] gap-8 mb-10">
           <div>
             <div className="text-lg font-bold tracking-tight">
-              Llama<span className="text-accent">me</span>
+              {appConfig.logoPrefix}<span className="text-accent">{appConfig.logoAccent}</span>
             </div>
             <p className="text-text-muted text-sm mt-2 max-w-[260px] leading-relaxed">
-              Smart scheduling for professionals who value their time and their
-              clients&apos; experience.
+              {appConfig.tagline}
             </p>
           </div>
-          {[
-            {
-              title: "product",
-              links: ["Features", "Integrations", "Pricing", "API"],
-            },
-            {
-              title: "company",
-              links: ["About", "Blog", "Careers", "Contact"],
-            },
-            { title: "legal", links: ["Privacy", "Terms", "Security"] },
-          ].map((col) => (
+          {footerNav.map((col) => (
             <div key={col.title}>
               <h4 className="text-[0.68rem] font-semibold uppercase tracking-[1.5px] text-text-muted mb-3.5 font-mono">
                 {col.title}
               </h4>
               <ul className="flex flex-col gap-2">
                 {col.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <Link
-                      href="#"
+                      href={link.href}
                       className="text-text-sec text-[0.88rem] hover:text-text transition"
                     >
-                      {link}
+                      {link.label}
                     </Link>
                   </li>
                 ))}
@@ -914,7 +838,7 @@ export default function LandingPage() {
           ))}
         </div>
         <div className="max-w-[1140px] mx-auto pt-5 border-t border-border flex justify-between items-center text-xs text-text-muted">
-          <span>&copy; 2026 Llamame by MantaRay Digital</span>
+          <span>&copy; {appConfig.copyrightYear} {appConfig.name} by {appConfig.company}</span>
           <span>Built for professionals who respect their time</span>
         </div>
       </footer>

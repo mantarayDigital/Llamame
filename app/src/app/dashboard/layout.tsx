@@ -9,25 +9,24 @@ import {
   BarChart3,
   Zap,
   Settings,
+  type LucideIcon,
 } from "lucide-react";
+import { appConfig } from "@/lib/config";
+import { dashboardNav } from "@/lib/navigation";
+import { demoUser } from "@/lib/demo-data";
 
-const navItems = [
-  { icon: Home, label: "Dashboard", href: "/dashboard", active: true },
-  {
-    icon: Calendar,
-    label: "Event Types",
-    href: "/dashboard/events",
-  },
-  { icon: CalendarDays, label: "Calendar", href: "#" },
-  { icon: Users, label: "Clients", href: "#" },
-  { icon: MessageCircle, label: "Messages", href: "#" },
-  { type: "divider" as const },
-  { icon: DollarSign, label: "Payments", href: "#" },
-  { icon: BarChart3, label: "Analytics", href: "#" },
-  { icon: Zap, label: "Workflows", href: "#" },
-  { type: "divider" as const },
-  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
-];
+/** Map icon name strings from dashboardNav to actual Lucide components */
+const iconMap: Record<string, LucideIcon> = {
+  Home,
+  Calendar,
+  CalendarDays,
+  Users,
+  MessageCircle,
+  DollarSign,
+  BarChart3,
+  Zap,
+  Settings,
+};
 
 export default function DashboardLayout({
   children,
@@ -42,43 +41,69 @@ export default function DashboardLayout({
           href="/"
           className="text-xl font-bold px-3 mb-8"
         >
-          Llama<span className="text-accent">me</span>
+          {appConfig.logoPrefix}
+          <span className="text-accent">{appConfig.logoAccent}</span>
         </Link>
 
         <nav className="flex flex-col gap-1 flex-1">
-          {navItems.map((item, i) => {
-            if ("type" in item && item.type === "divider") {
-              return (
-                <div key={`div-${i}`} className="h-px bg-border my-3" />
-              );
-            }
-            const Icon = item.icon!;
-            return (
-              <Link
-                key={item.label}
-                href={item.href!}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                  item.active
-                    ? "bg-accent-muted text-text border border-accent/20"
-                    : "text-text-sec hover:bg-white/[0.03] hover:text-text"
-                }`}
-              >
-                <Icon className="w-[18px] h-[18px]" />
-                {item.label}
-              </Link>
-            );
-          })}
+          {dashboardNav.map((group, gi) => (
+            <div key={gi}>
+              {gi > 0 && (
+                <div className="h-px bg-border my-3" />
+              )}
+              {group.items.map((item) => {
+                const Icon = iconMap[item.icon];
+                if (item.comingSoon) {
+                  return (
+                    <span
+                      key={item.label}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium opacity-40 cursor-default text-text-sec"
+                    >
+                      {Icon && <Icon className="w-[18px] h-[18px]" />}
+                      {item.label}
+                      {item.badge && (
+                        <span className="ml-auto text-[0.65rem] px-1.5 py-0.5 rounded-full bg-accent-muted text-accent font-semibold">
+                          {item.badge}
+                        </span>
+                      )}
+                    </span>
+                  );
+                }
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                      item.href === "/dashboard"
+                        ? "bg-accent-muted text-text border border-accent/20"
+                        : "text-text-sec hover:bg-white/[0.03] hover:text-text"
+                    }`}
+                  >
+                    {Icon && <Icon className="w-[18px] h-[18px]" />}
+                    {item.label}
+                    {item.badge && (
+                      <span className="ml-auto text-[0.65rem] px-1.5 py-0.5 rounded-full bg-accent-muted text-accent font-semibold">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-white/[0.03]">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-violet flex items-center justify-center font-bold text-xs shrink-0">
-            M
+            {demoUser.name.charAt(0)}
           </div>
           <div className="min-w-0 flex-1">
             <strong className="block text-sm font-semibold truncate">
-              MantaRay Digital
+              {demoUser.name}
             </strong>
-            <span className="text-xs text-text-muted">Pro Plan</span>
+            <span className="text-xs text-text-muted capitalize">
+              {demoUser.plan} Plan
+            </span>
           </div>
         </div>
       </aside>

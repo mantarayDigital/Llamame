@@ -36,8 +36,9 @@ Llamame is a Calendly clone built for MantaRay Digital with unique differentiato
 | Component | Description | Location |
 |---|---|---|
 | HTML Mockups | 11 static HTML design explorations (6 pages + 5 theme variants) | `/mockups/` |
-| Next.js App | Full React application with 5 routes | `/app/` |
-| Convex Backend | Database schema with 5 tables | `/app/convex/` |
+| Next.js App | Full React application with 7 routes + 2 dynamic routes | `/app/` |
+| Convex Backend | Database schema with 15 tables (multi-tenant SaaS) | `/app/convex/` |
+| Config Layer | 6 centralised config/data modules — zero hardcoded assumptions | `/app/src/lib/` |
 | GitHub Pages | Deployment workflow for mockups | `/.github/workflows/` |
 
 ### Tech Stack
@@ -446,7 +447,7 @@ Dashboard AI banner showing actionable insights:
 
 ## 11. Pages & Routes
 
-### Implemented Routes (5)
+### Implemented Routes (7 static + 2 dynamic)
 
 | Route | Component | Type | Description |
 |---|---|---|---|
@@ -454,7 +455,15 @@ Dashboard AI banner showing actionable insights:
 | `/booking` | `booking/page.tsx` | Client | 4-step booking flow — event type, date/time, Vibe Check, confirmation |
 | `/dashboard` | `dashboard/page.tsx` | Client | Admin dashboard — AI banner, stats, meetings, event types, clients |
 | `/dashboard/events` | `dashboard/events/page.tsx` | Client | Event type cards with toggle, copy link, preview, edit actions |
-| `/dashboard/settings` | `dashboard/settings/page.tsx` | Client | 6 tabs: Profile, Integrations, Branding, AI & Energy, Notifications, API |
+| `/dashboard/settings` | `dashboard/settings/page.tsx` | Client | 7 tabs: Profile, Integrations, Branding, AI & Energy, Notifications, Team, API |
+| `/[handle]` | `[handle]/page.tsx` | Dynamic | Public booking page per user (shows active event types) |
+| `/[handle]/[slug]` | `[handle]/[slug]/page.tsx` | Dynamic | Direct event type booking page |
+
+### Middleware
+
+| File | Purpose |
+|---|---|
+| `src/middleware.ts` | Auth middleware stub — protects `/dashboard/*` routes. Ready for Clerk/Auth0/Convex Auth. |
 
 ### Planned Routes (Not Yet Built)
 
@@ -466,8 +475,6 @@ Dashboard AI banner showing actionable insights:
 | `/dashboard/payments` | Payment history and invoices | Medium |
 | `/dashboard/analytics` | Charts, reports, trends | Medium |
 | `/dashboard/workflows` | Workflow builder and management | Medium |
-| `/[handle]` | Public booking page per user | High |
-| `/[handle]/[event-slug]` | Direct event type booking | High |
 | `/auth/login` | Authentication | High |
 | `/auth/signup` | Registration | High |
 | `/booking/confirmation/[id]` | Dynamic confirmation page | Medium |
@@ -476,22 +483,68 @@ Dashboard AI banner showing actionable insights:
 
 ## 12. Database Schema
 
-### Convex Tables (5)
+### Convex Tables (15) — Multi-tenant SaaS
+
+All tenant-scoped tables include an optional `orgId` field for team/enterprise multi-tenant support.
 
 ```
 users
 ├── name: string
 ├── email: string (indexed)
 ├── handle: string (indexed)
+├── externalId?: string (auth provider ID)
 ├── avatarUrl?: string
 ├── timezone: string
-├── plan: "free" | "pro" | "team"
+├── plan: "free" | "pro" | "team" | "enterprise"
+├── orgId?: Id<"organizations">
+├── role?: "owner" | "admin" | "member" | "viewer"
 ├── energyProfile?: { peakStart, peakEnd, lowStart, lowEnd }
-├── branding?: { logo?, accentColor?, bio? }
+├── branding?: { logo?, accentColor?, bio?, customCss?, showPoweredBy? }
+├── notificationPrefs?: { emailConfirmations, emailReminders, whatsappReminders, slackNotifications, dailyDigest, reminderHoursBefore }
+├── onboardingCompleted?: boolean
+├── lastLoginAt?: number
+└── createdAt: number
+
+organizations
+├── name: string
+├── slug: string (indexed)
+├── ownerId: Id<"users"> (indexed)
+├── plan: "free" | "pro" | "team" | "enterprise"
+├── settings?: { defaultTimezone, defaultCurrency, defaultLocale, maxTeamMembers }
+├── branding?: { logo?, accentColor?, customCss?, showPoweredBy? }
+└── createdAt: number
+
+teamMembers (junction: organizations ↔ users)
+├── orgId: Id<"organizations"> (indexed)
+├── userId: Id<"users"> (indexed)
+├── role: "owner" | "admin" | "member" | "viewer"
+├── invitedBy?: Id<"users">
+└── joinedAt: number
+
+invitations
+├── orgId: Id<"organizations"> (indexed)
+├── email: string (indexed)
+├── role: "admin" | "member" | "viewer"
+├── invitedBy: Id<"users">
+├── status: "pending" | "accepted" | "expired"
+├── token: string (indexed, unique)
+└── createdAt: number
+
+subscriptions
+├── userId?: Id<"users"> (indexed)
+├── orgId?: Id<"organizations"> (indexed)
+├── plan: "free" | "pro" | "team" | "enterprise"
+├── status: "active" | "past_due" | "cancelled" | "trialing"
+├── interval: "monthly" | "yearly"
+├── externalId?: string (Stripe subscription ID)
+├── currentPeriodStart?: number
+├── currentPeriodEnd?: number
+├── cancelAtPeriodEnd?: boolean
 └── createdAt: number
 
 eventTypes
 ├── userId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations">
 ├── title: string
 ├── slug: string (indexed)
 ├── description?: string
@@ -507,27 +560,45 @@ eventTypes
 ├── bufferBefore?: number (minutes)
 ├── bufferAfter?: number (minutes)
 ├── maxPerDay?: number
+├── minNotice?: number (hours)
+├── maxAdvance?: number (days)
 ├── availability?: [{ day, startTime, endTime }]
-└── createdAt: number
+├── dateOverrides?: [{ date, startTime?, endTime?, blocked? }]
+├── customFields?: [{ name, type, required }]
+├── redirectUrl?: string
+├── confirmationMessage?: string
+├── createdAt: number
+└── updatedAt?: number
 
 bookings
 ├── eventTypeId: Id<"eventTypes">
 ├── hostId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations">
 ├── clientName: string
 ├── clientEmail: string (indexed)
+├── clientPhone?: string
 ├── startTime: number (indexed)
 ├── endTime: number
 ├── timezone: string
 ├── status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show"
 ├── meetingUrl?: string
-├── paymentStatus?: "pending" | "paid" | "refunded"
+├── calendarEventId?: string
+├── paymentStatus?: "pending" | "paid" | "refunded" | "failed"
 ├── paymentAmount?: number
+├── paymentCurrency?: string
+├── paymentExternalId?: string
 ├── vibeCheck?: { mood, goal?, context? }
+├── customFieldAnswers?: any
 ├── aiNotes?: string
-└── createdAt: number
+├── cancellationReason?: string
+├── rescheduledFrom?: Id<"bookings">
+├── source?: string
+├── createdAt: number
+└── updatedAt?: number
 
 clients
 ├── userId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations">
 ├── name: string
 ├── email: string (indexed)
 ├── company?: string
@@ -542,13 +613,108 @@ clients
 
 workflows
 ├── userId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations">
 ├── name: string
-├── trigger: "booking_created" | "booking_confirmed" | "booking_cancelled" | "booking_reminder" | "booking_completed"
-├── action: "send_email" | "send_sms" | "send_whatsapp" | "send_slack" | "update_crm"
+├── trigger: "booking_created" | "booking_confirmed" | "booking_cancelled" | "booking_reminder" | "booking_completed" | "booking_rescheduled" | "payment_received" | "no_show_detected"
+├── action: "send_email" | "send_sms" | "send_whatsapp" | "send_slack" | "update_crm" | "create_invoice" | "add_to_list"
 ├── config: any
 ├── isActive: boolean
 └── createdAt: number
+
+workflowLogs
+├── workflowId: Id<"workflows"> (indexed)
+├── bookingId?: Id<"bookings">
+├── status: "success" | "failure" | "skipped"
+├── error?: string
+└── executedAt: number
+
+integrations
+├── userId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations">
+├── provider: string (indexed)
+├── status: "connected" | "disconnected" | "error"
+├── credentials?: any (encrypted at rest)
+├── config?: any
+├── lastSyncAt?: number
+└── connectedAt: number
+
+apiKeys
+├── userId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations">
+├── name: string
+├── keyHash: string (indexed)
+├── prefix: string
+├── lastUsedAt?: number
+├── expiresAt?: number
+└── createdAt: number
+
+webhookEndpoints
+├── userId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations">
+├── url: string
+├── events: string[]
+├── secret: string
+├── isActive: boolean
+├── lastDeliveryAt?: number
+└── createdAt: number
+
+webhookDeliveries
+├── webhookId: Id<"webhookEndpoints"> (indexed)
+├── event: string
+├── payload: any
+├── statusCode?: number
+├── response?: string
+├── attempts: number
+└── deliveredAt: number
+
+auditLog
+├── userId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations"> (indexed)
+├── action: string (indexed)
+├── resource: string
+├── resourceId?: string
+├── details?: any
+├── ipAddress?: string
+└── createdAt: number (indexed)
+
+emailTemplates
+├── userId: Id<"users"> (indexed)
+├── orgId?: Id<"organizations">
+├── name: string
+├── subject: string
+├── bodyHtml: string
+├── bodyText?: string
+├── variables?: string[]
+├── isDefault: boolean
+└── createdAt: number
 ```
+
+---
+
+## 12b. Config-Driven Architecture
+
+All hardcoded values, brand references, and mock data have been extracted into 6 centralised modules. No page component contains assumptions — everything flows from config.
+
+| Module | File | Purpose |
+|---|---|---|
+| **App Config** | `src/lib/config.ts` | Brand names, domain, URLs, env vars, timezones, moods, location types, duration presets, accent colors, default settings |
+| **Types** | `src/lib/types.ts` | ~40 TypeScript interfaces mirroring Convex schema for client use (`UserProfile`, `EventType`, `Booking`, `Client`, `Organization`, etc.) |
+| **Plans** | `src/lib/plans.ts` | 4 plan tiers (free/pro/team/enterprise), `PlanLimits` with 22 boolean/numeric feature flags, `hasFeature()`, `getLimit()` helpers |
+| **Integrations** | `src/lib/integrations.ts` | 12 integration definitions (provider, name, icon, category, requiredPlan, requiredEnvVars, authType), with `getIntegrationsByCategory()` and `getAvailableIntegrations(planTier)` |
+| **Navigation** | `src/lib/navigation.ts` | `dashboardNav` (3 groups), `marketingNav`, `footerNav` (3 columns), `settingsTabs` (7 tabs) — all with `requiredPlan` gating |
+| **Demo Data** | `src/lib/demo-data.ts` | ALL mock data (`demoUser`, `demoEventTypes`, `demoDashboardStats`, meetings, clients, energy blocks, notification prefs, testimonials, connected integrations, time slots) |
+
+### Key Design Principles
+
+1. **Single Source of Truth** — Change a brand name, add a timezone, or update plan limits in one file and it propagates everywhere.
+2. **Plan-Gated Features** — `hasFeature('free', 'aiBriefs')` returns `false`. Navigation items and settings tabs have `requiredPlan` fields.
+3. **Environment-First** — Domain, URLs, and service endpoints come from `process.env.NEXT_PUBLIC_*` with sensible fallbacks.
+4. **Demo ↔ Production Swap** — Pages import from `demo-data.ts` now; when Convex is wired up, swap to `useQuery()` calls with identical types.
+5. **Multi-Tenant Ready** — Every tenant-scoped schema table has optional `orgId`. Types include `Organization`, `TeamMember`, `OrgSettings`.
+
+### Environment Variables
+
+All required environment variables are documented in `app/.env.example` (25+ variables organized by service).
 
 ---
 
@@ -603,7 +769,8 @@ workflows
 - [ ] Write Convex queries: list event types, get bookings, get clients
 - [ ] Write Convex mutations: create booking, update event type, update settings
 - [ ] Connect all forms to mutations (booking flow, settings, event editor)
-- [ ] Dynamic booking page (`/[handle]` and `/[handle]/[event-slug]`)
+- [x] Dynamic booking pages (`/[handle]` and `/[handle]/[slug]`) — UI stubs done
+- [x] Auth middleware stub for `/dashboard/*` route protection
 - [ ] Real availability calculation from event type rules
 
 ### Phase 2 — Calendar & Payments
@@ -695,25 +862,30 @@ The static HTML mockups are deployed via GitHub Pages:
 
 ---
 
-## Pricing Plans (Planned)
+## Pricing Plans (Configured in `lib/plans.ts`)
 
-| Feature | Free | Pro ($12/mo) | Team ($24/seat/mo) |
-|---|---|---|---|
-| Event types | 1 | Unlimited | Unlimited |
-| Google Calendar sync | Yes | Yes | Yes |
-| Email notifications | Yes | Yes | Yes |
-| Booking page | Yes | Yes | Yes |
-| AI Meeting Briefs | — | Yes | Yes |
-| All integrations | — | Yes | Yes |
-| WhatsApp booking bot | — | Yes | Yes |
-| Payments + Vibe Check | — | Yes | Yes |
-| Custom branding | — | Yes | Yes |
-| Energy-aware scheduling | — | Yes | Yes |
-| Team scheduling | — | — | Yes |
-| Client Intelligence dashboard | — | — | Yes |
-| Advanced analytics | — | — | Yes |
-| API access | — | — | Yes |
-| White-label | — | — | Yes |
+| Feature | Free | Pro ($12/mo) | Team ($24/seat/mo) | Enterprise (Custom) |
+|---|---|---|---|---|
+| Event types | 3 | 25 | Unlimited | Unlimited |
+| Bookings/month | 50 | 500 | 5,000 | Unlimited |
+| Team members | — | — | 25 | Unlimited |
+| Calendar integrations | Yes | Yes | Yes | Yes |
+| Video integrations | — | Yes | Yes | Yes |
+| Payment integrations | — | Yes | Yes | Yes |
+| AI Meeting Briefs | — | Yes | Yes | Yes |
+| Energy scheduling | — | Yes | Yes | Yes |
+| Fatigue protection | — | Yes | Yes | Yes |
+| Client intelligence | — | — | Yes | Yes |
+| Vibe Check | — | Yes | Yes | Yes |
+| Custom branding | — | Yes | Yes | Yes |
+| White-label | — | — | — | Yes |
+| API access | — | — | Yes | Yes |
+| Webhooks | — | — | 10 | Unlimited |
+| Workflows | — | 5 | 50 | Unlimited |
+| Analytics | Basic | Advanced | Full | Full |
+| Priority support | — | — | — | Yes |
+
+Feature gating is enforced via `hasFeature(tier, feature)` and `getLimit(tier, feature)` from `lib/plans.ts`.
 
 ---
 

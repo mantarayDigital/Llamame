@@ -7,146 +7,70 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+import { defaults } from "@/lib/config";
+import {
+  demoDashboardStats,
+  demoTodayMeetings,
+  demoTomorrowMeetings,
+  demoAiBrief,
+  demoAiInsight,
+  demoClients,
+  demoEventTypes,
+} from "@/lib/demo-data";
+
+/** Format currency using config defaults */
+const revenueFormatter = new Intl.NumberFormat(defaults.locale, {
+  style: "currency",
+  currency: defaults.currency,
+  maximumFractionDigits: 0,
+});
+
+/** Map location value to display label */
+const locationLabels: Record<string, string> = {
+  google_meet: "Google Meet",
+  zoom: "Zoom",
+  phone: "Phone",
+  in_person: "In Person",
+  custom: "Custom",
+};
+
+/** Map color token to Tailwind bg class */
+const colorBgMap: Record<string, string> = {
+  accent: "bg-accent",
+  violet: "bg-violet",
+  green: "bg-green",
+  amber: "bg-amber",
+  rose: "bg-rose",
+};
+
+/** Map meeting status to display properties */
+const statusStyles: Record<string, { label: string; className: string }> = {
+  confirmed: { label: "Confirmed", className: "bg-green-muted text-green" },
+  pending: { label: "Pending", className: "bg-amber-muted text-amber" },
+  cancelled: { label: "Cancelled", className: "bg-rose-muted text-rose" },
+};
 
 const stats = [
   {
     label: "Meetings This Week",
-    value: "18",
-    change: "+12%",
+    value: String(demoDashboardStats.meetingsThisWeek),
+    change: `+${demoDashboardStats.meetingsChange}%`,
     changeLabel: "vs last week",
-    up: true,
+    up: demoDashboardStats.meetingsChange >= 0,
   },
   {
     label: "Revenue Collected",
-    value: "$2,450",
-    change: "+8%",
+    value: revenueFormatter.format(demoDashboardStats.revenueCollected),
+    change: `+${demoDashboardStats.revenueChange}%`,
     changeLabel: "vs last week",
-    up: true,
+    up: demoDashboardStats.revenueChange >= 0,
   },
   {
     label: "Show Rate",
-    value: "94%",
-    change: "+3%",
+    value: `${demoDashboardStats.showRate}%`,
+    change: `+${demoDashboardStats.showRateChange}%`,
     changeLabel: "improvement",
-    up: true,
-  },
-];
-
-const meetings = [
-  {
-    time: "10:00",
-    duration: "60 min",
-    title: "Strategy Session",
-    client: "Sarah Chen",
-    company: "TechFlow Inc",
-    color: "bg-violet",
-    status: "Confirmed",
-    statusClass: "bg-green-muted text-green",
-  },
-  {
-    time: "13:00",
-    duration: "30 min",
-    title: "Discovery Call",
-    client: "James Rodriguez",
-    company: "StartupXYZ",
-    color: "bg-accent",
-    status: "Confirmed",
-    statusClass: "bg-green-muted text-green",
-  },
-  {
-    time: "15:30",
-    duration: "15 min",
-    title: "Quick Check-in",
-    client: "Ana Kovacs",
-    company: "GrowthLab",
-    color: "bg-rose",
-    status: "Pending",
-    statusClass: "bg-amber-muted text-amber",
-  },
-];
-
-const tomorrowMeetings = [
-  {
-    time: "09:00",
-    duration: "60 min",
-    title: "Strategy Session",
-    client: "Lucas Sharma",
-    company: "DesignCo",
-    color: "bg-violet",
-    status: "Confirmed",
-    statusClass: "bg-green-muted text-green",
-  },
-  {
-    time: "11:00",
-    duration: "30 min",
-    title: "Discovery Call",
-    client: "Emily Watson",
-    company: "BrandForge",
-    color: "bg-accent",
-    status: "Pending",
-    statusClass: "bg-amber-muted text-amber",
-  },
-];
-
-const eventTypes = [
-  {
-    name: "Discovery Call",
-    meta: "30 min \u00b7 Google Meet",
-    color: "bg-accent",
-    bookings: 42,
-    active: true,
-  },
-  {
-    name: "Strategy Session",
-    meta: "60 min \u00b7 $150 \u00b7 Google Meet",
-    color: "bg-violet",
-    bookings: 28,
-    active: true,
-  },
-  {
-    name: "Quick Check-in",
-    meta: "15 min \u00b7 Phone",
-    color: "bg-rose",
-    bookings: 67,
-    active: true,
-  },
-  {
-    name: "Workshop",
-    meta: "120 min \u00b7 $500 \u00b7 Zoom",
-    color: "bg-amber",
-    bookings: 5,
-    active: false,
-  },
-];
-
-const clients = [
-  {
-    name: "Sarah Chen",
-    initials: "SC",
-    gradient: "from-accent to-violet",
-    meetings: 12,
-    vibe: "\u{1F680}",
-  },
-  {
-    name: "James Rodriguez",
-    initials: "JR",
-    gradient: "from-violet to-rose",
-    meetings: 1,
-    vibe: "\u{1F914}",
-  },
-  {
-    name: "Ana Kovacs",
-    initials: "AK",
-    gradient: "from-amber to-rose",
-    meetings: 8,
-    vibe: "\u{1F60A}",
-  },
-  {
-    name: "Lucas Sharma",
-    initials: "LS",
-    gradient: "from-accent to-green",
-    meetings: 5,
-    vibe: "\u{1F60A}",
+    up: demoDashboardStats.showRateChange >= 0,
   },
 ];
 
@@ -159,8 +83,9 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">
             Good morning
           </h1>
+          {/* TODO: Date will come from Date() in production */}
           <p className="text-text-sec text-sm mt-1">
-            Thursday, February 6, 2026 &middot; 3 meetings today
+            Thursday, February 6, 2026 &middot; {demoTodayMeetings.length} meetings today
           </p>
         </div>
         <div className="flex gap-3 items-center">
@@ -185,9 +110,7 @@ export default function DashboardPage() {
         <div className="flex-1">
           <strong className="text-sm block mb-0.5">AI Insight</strong>
           <p className="text-sm text-text-sec">
-            Your no-show rate dropped 23% this month after adding the reminder
-            workflow. Clients who complete the Vibe Check are 4x more likely to
-            show up.
+            {demoAiInsight}
           </p>
         </div>
         <button className="px-4 py-2 rounded-lg text-xs font-semibold bg-white/[0.03] text-text border border-border hover:bg-bg-card-hover transition shrink-0">
@@ -227,13 +150,14 @@ export default function DashboardPage() {
               Today&apos;s Energy Score
             </span>
             <div className="text-3xl font-bold flex items-center gap-2">
-              <span className="text-green text-sm">&#9679;</span> 78
+              <span className="text-green text-sm">&#9679;</span>{" "}
+              {demoDashboardStats.energyScore}
             </div>
           </div>
           <div className="h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-violet to-accent"
-              style={{ width: "78%" }}
+              style={{ width: `${demoDashboardStats.energyScore}%` }}
             />
           </div>
         </div>
@@ -261,17 +185,13 @@ export default function DashboardPage() {
                 <Sparkles className="w-3 h-3" /> AI Brief for next meeting
               </div>
               <p className="text-sm text-text-sec leading-relaxed">
-                <strong className="text-text">Sarah from TechFlow</strong> — This is her
-                3rd Strategy Session. Last time you discussed SEO migration and
-                she wanted a progress update. She completed the Vibe Check as
-                &ldquo;Excited&rdquo;.
+                <strong className="text-text">
+                  {demoAiBrief.clientName} from {demoAiBrief.clientCompany}
+                </strong>{" "}
+                &mdash; {demoAiBrief.summary}
               </p>
               <ul className="mt-2 space-y-0.5">
-                {[
-                  "Follow up on SEO migration timeline",
-                  "Review Q1 content calendar she submitted",
-                  "She mentioned interest in paid ads",
-                ].map((item) => (
+                {demoAiBrief.suggestedTopics.map((item) => (
                   <li
                     key={item}
                     className="text-sm text-text-sec flex items-center gap-2"
@@ -282,65 +202,71 @@ export default function DashboardPage() {
               </ul>
             </div>
 
-            {meetings.map((m) => (
-              <div
-                key={`${m.time}-${m.title}`}
-                className="flex items-center gap-3.5 px-3 py-3.5 rounded-lg hover:bg-white/[0.03] cursor-pointer transition"
-              >
-                <div className="text-center min-w-[54px]">
-                  <div className="text-sm font-semibold">{m.time}</div>
-                  <div className="text-[0.7rem] text-text-muted">
-                    {m.duration}
-                  </div>
-                </div>
+            {demoTodayMeetings.map((m) => {
+              const status = statusStyles[m.status] ?? statusStyles.pending;
+              return (
                 <div
-                  className={`w-[3px] h-10 rounded-sm shrink-0 ${m.color}`}
-                />
-                <div className="flex-1">
-                  <div className="text-sm font-semibold">{m.title}</div>
-                  <div className="text-xs text-text-sec">
-                    {m.client} &middot; {m.company}
-                  </div>
-                </div>
-                <span
-                  className={`px-2.5 py-1 rounded-full text-[0.7rem] font-semibold ${m.statusClass}`}
+                  key={m.id}
+                  className="flex items-center gap-3.5 px-3 py-3.5 rounded-lg hover:bg-white/[0.03] cursor-pointer transition"
                 >
-                  {m.status}
-                </span>
-              </div>
-            ))}
+                  <div className="text-center min-w-[54px]">
+                    <div className="text-sm font-semibold">{m.time}</div>
+                    <div className="text-[0.7rem] text-text-muted">
+                      {m.duration}
+                    </div>
+                  </div>
+                  <div
+                    className={`w-[3px] h-10 rounded-sm shrink-0 ${m.color}`}
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold">{m.title}</div>
+                    <div className="text-xs text-text-sec">
+                      {m.client} &middot; {m.company}
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[0.7rem] font-semibold ${status.className}`}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+              );
+            })}
 
             <div className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider mt-2">
               Tomorrow &middot; Feb 7
             </div>
 
-            {tomorrowMeetings.map((m) => (
-              <div
-                key={`${m.time}-${m.title}`}
-                className="flex items-center gap-3.5 px-3 py-3.5 rounded-lg hover:bg-white/[0.03] cursor-pointer transition"
-              >
-                <div className="text-center min-w-[54px]">
-                  <div className="text-sm font-semibold">{m.time}</div>
-                  <div className="text-[0.7rem] text-text-muted">
-                    {m.duration}
-                  </div>
-                </div>
+            {demoTomorrowMeetings.map((m) => {
+              const status = statusStyles[m.status] ?? statusStyles.pending;
+              return (
                 <div
-                  className={`w-[3px] h-10 rounded-sm shrink-0 ${m.color}`}
-                />
-                <div className="flex-1">
-                  <div className="text-sm font-semibold">{m.title}</div>
-                  <div className="text-xs text-text-sec">
-                    {m.client} &middot; {m.company}
-                  </div>
-                </div>
-                <span
-                  className={`px-2.5 py-1 rounded-full text-[0.7rem] font-semibold ${m.statusClass}`}
+                  key={m.id}
+                  className="flex items-center gap-3.5 px-3 py-3.5 rounded-lg hover:bg-white/[0.03] cursor-pointer transition"
                 >
-                  {m.status}
-                </span>
-              </div>
-            ))}
+                  <div className="text-center min-w-[54px]">
+                    <div className="text-sm font-semibold">{m.time}</div>
+                    <div className="text-[0.7rem] text-text-muted">
+                      {m.duration}
+                    </div>
+                  </div>
+                  <div
+                    className={`w-[3px] h-10 rounded-sm shrink-0 ${m.color}`}
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold">{m.title}</div>
+                    <div className="text-xs text-text-sec">
+                      {m.client} &middot; {m.company}
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[0.7rem] font-semibold ${status.className}`}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -358,36 +284,43 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="p-3">
-              {eventTypes.map((et) => (
-                <div
-                  key={et.name}
-                  className="flex items-center gap-3.5 p-3.5 rounded-lg border border-border bg-white/[0.03] mb-2 last:mb-0 hover:border-border-hover transition cursor-pointer"
-                >
+              {demoEventTypes.map((et) => {
+                const bgColor = colorBgMap[et.color] ?? "bg-accent";
+                const locationLabel =
+                  locationLabels[et.location] ?? et.location;
+                const meta = `${et.duration} min${
+                  et.price
+                    ? ` \u00b7 ${revenueFormatter.format(et.price)}`
+                    : ""
+                } \u00b7 ${locationLabel}`;
+                return (
                   <div
-                    className={`w-1 h-9 rounded shrink-0 ${et.color}`}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm font-semibold">{et.name}</div>
-                    <div className="text-xs text-text-muted">{et.meta}</div>
-                  </div>
-                  <div className="text-xs text-text-muted min-w-[60px] text-right">
-                    {et.bookings} booked
-                  </div>
-                  <div
-                    className={`w-10 h-[22px] rounded-full relative ${
-                      et.active ? "bg-green/30" : "bg-white/10"
-                    }`}
+                    key={et.id}
+                    className="flex items-center gap-3.5 p-3.5 rounded-lg border border-border bg-white/[0.03] mb-2 last:mb-0 hover:border-border-hover transition cursor-pointer"
                   >
                     <div
-                      className={`absolute top-[3px] w-4 h-4 rounded-full transition ${
-                        et.active
-                          ? "left-[21px] bg-green"
-                          : "left-[3px] bg-text-muted"
-                      }`}
+                      className={`w-1 h-9 rounded shrink-0 ${bgColor}`}
                     />
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold">{et.title}</div>
+                      <div className="text-xs text-text-muted">{meta}</div>
+                    </div>
+                    <div
+                      className={`w-10 h-[22px] rounded-full relative ${
+                        et.isActive ? "bg-green/30" : "bg-white/10"
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-[3px] w-4 h-4 rounded-full transition ${
+                          et.isActive
+                            ? "left-[21px] bg-green"
+                            : "left-[3px] bg-text-muted"
+                        }`}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -400,9 +333,9 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="p-4">
-              {clients.map((c) => (
+              {demoClients.map((c) => (
                 <div
-                  key={c.name}
+                  key={c.id}
                   className="flex items-center gap-3 py-2.5 border-b border-border last:border-b-0"
                 >
                   <div

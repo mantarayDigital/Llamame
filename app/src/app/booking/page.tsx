@@ -14,30 +14,25 @@ import {
   Check,
   Sparkles,
 } from "lucide-react";
+import { appConfig, timezones, vibeCheckMoods, locationTypes } from "@/lib/config";
+import { demoUser, demoEventTypes, demoTimeSlots } from "@/lib/demo-data";
 
-const timeSlots = [
-  "9:00 AM",
-  "9:30 AM",
-  "10:00 AM",
-  "10:30 AM",
-  "11:00 AM",
-  "1:00 PM",
-  "1:30 PM",
-  "2:00 PM",
-  "2:30 PM",
-  "3:00 PM",
-  "3:30 PM",
-  "4:00 PM",
-];
+/** The event type used on this booking page (Strategy Session). */
+const eventType = demoEventTypes[1];
 
-const moods = [
-  { emoji: "\u{1F680}", label: "Excited" },
-  { emoji: "\u{1F60A}", label: "Optimistic" },
-  { emoji: "\u{1F914}", label: "Curious" },
-  { emoji: "\u{1F624}", label: "Stressed" },
-  { emoji: "\u{1F610}", label: "Neutral" },
-];
+/** Resolve the human-readable location label from locationTypes config. */
+const locationLabel =
+  locationTypes.find((l) => l.value === eventType.location)?.label ??
+  eventType.location;
 
+/** Format price with currency symbol. */
+const formattedPrice =
+  eventType.currency === "USD"
+    ? `$${eventType.price}`
+    : `${eventType.price} ${eventType.currency}`;
+
+// In production, calendar days are generated dynamically from the host's
+// availability rules, existing bookings, and calendar integrations.
 const calendarDays = [
   // Week 1: empty slots then 1
   { day: 0 },
@@ -156,30 +151,30 @@ export default function BookingPage() {
             {/* Host Panel */}
             <div className="p-8 border-r border-border flex flex-col">
               <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-accent to-violet flex items-center justify-center text-3xl font-bold mb-4">
-                M
+                {demoUser.name.charAt(0)}
               </div>
-              <div className="text-xl font-bold mb-1">MantaRay Digital</div>
+              <div className="text-xl font-bold mb-1">{demoUser.name}</div>
               <div className="text-text-muted text-sm mb-6">
-                llamame.io/mantaray
+                {appConfig.domain}/{demoUser.handle}
               </div>
 
               <div className="p-4 rounded-lg border border-violet bg-violet-muted/50 mb-6">
                 <div className="flex items-center gap-2.5 mb-2">
                   <div className="w-1 h-7 rounded bg-violet" />
-                  <span className="font-semibold">Strategy Session</span>
+                  <span className="font-semibold">{eventType.title}</span>
                 </div>
                 <div className="pl-3.5 flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-sm text-text-sec">
                     <Clock className="w-4 h-4 opacity-70" />
-                    60 minutes
+                    {eventType.duration} minutes
                   </div>
                   <div className="flex items-center gap-2 text-sm text-text-sec">
                     <Video className="w-4 h-4 opacity-70" />
-                    Google Meet
+                    {locationLabel}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-text-sec">
                     <DollarSign className="w-4 h-4 opacity-70" />
-                    $150 consultation fee
+                    {formattedPrice} consultation fee
                   </div>
                 </div>
               </div>
@@ -193,12 +188,11 @@ export default function BookingPage() {
               <div className="mt-auto flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-white/[0.03] border border-border text-sm text-text-sec">
                 <Globe className="w-4 h-4" />
                 <select className="bg-transparent border-none text-text text-sm outline-none cursor-pointer">
-                  <option>America/New_York (EST)</option>
-                  <option>America/Chicago (CST)</option>
-                  <option>America/Denver (MST)</option>
-                  <option>America/Los_Angeles (PST)</option>
-                  <option>Europe/London (GMT)</option>
-                  <option>Europe/Madrid (CET)</option>
+                  {timezones.map((tz) => (
+                    <option key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -206,6 +200,7 @@ export default function BookingPage() {
             {/* Calendar Panel */}
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
+                {/* TODO: dynamic from calendar state instead of hardcoded month */}
                 <h2 className="text-xl font-semibold">February 2026</h2>
                 <div className="flex gap-2">
                   <button className="w-9 h-9 rounded-lg border border-border bg-transparent text-text-sec hover:border-border-hover hover:text-text transition flex items-center justify-center">
@@ -266,7 +261,7 @@ export default function BookingPage() {
                     Tuesday, Feb {selectedDay}
                   </div>
                   <div className="flex flex-col gap-1.5 max-h-[340px] overflow-y-auto">
-                    {timeSlots.map((t) => (
+                    {demoTimeSlots.map((t) => (
                       <div
                         key={t}
                         onClick={() => setSelectedTime(t)}
@@ -313,7 +308,7 @@ export default function BookingPage() {
                   How are you feeling about this meeting?
                 </label>
                 <div className="flex gap-2.5">
-                  {moods.map((m) => (
+                  {vibeCheckMoods.map((m) => (
                     <div
                       key={m.label}
                       onClick={() => setSelectedMood(m.label)}
@@ -410,7 +405,7 @@ export default function BookingPage() {
             </div>
             <h2 className="text-2xl font-bold mb-2">You&apos;re booked!</h2>
             <p className="text-text-sec mb-8">
-              Strategy Session with MantaRay Digital
+              {eventType.title} with {demoUser.name}
             </p>
             <div className="inline-flex flex-col gap-3 text-left bg-bg-card border border-border rounded-xl p-6 mb-8">
               <div className="flex items-center gap-3 text-sm">
@@ -421,11 +416,11 @@ export default function BookingPage() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Video className="w-4 h-4 text-accent" />
-                <span className="text-text-sec">Google Meet (link sent via email)</span>
+                <span className="text-text-sec">{locationLabel} (link sent via email)</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <DollarSign className="w-4 h-4 text-accent" />
-                <span className="text-text-sec">$150 consultation fee</span>
+                <span className="text-text-sec">{formattedPrice} consultation fee</span>
               </div>
             </div>
             <div>
@@ -443,7 +438,7 @@ export default function BookingPage() {
         <div className="text-center py-4 border-t border-border text-xs text-text-muted">
           Powered by{" "}
           <Link href="/" className="text-text-sec font-semibold">
-            Llamame
+            {appConfig.name}
           </Link>{" "}
           &middot; Smart scheduling for professionals
         </div>

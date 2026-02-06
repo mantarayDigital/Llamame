@@ -9,43 +9,67 @@ import {
   Bell,
   Code,
   Check,
-  X,
-  ExternalLink,
+  Users,
+  type LucideIcon,
 } from "lucide-react";
+import { appConfig, defaults, timezones } from "@/lib/config";
+import { settingsTabs } from "@/lib/navigation";
+import { integrations } from "@/lib/integrations";
+import {
+  demoUser,
+  demoEnergyBlocks,
+  demoNotificationPrefs,
+  demoConnectedIntegrations,
+} from "@/lib/demo-data";
 
-const tabs = [
-  { id: "profile", label: "Profile", icon: User },
-  { id: "integrations", label: "Integrations", icon: Plug },
-  { id: "branding", label: "Branding", icon: Palette },
-  { id: "ai", label: "AI & Energy", icon: Brain },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "api", label: "API", icon: Code },
-];
+/** Map icon name strings from settingsTabs to actual Lucide components */
+const iconMap: Record<string, LucideIcon> = {
+  User,
+  Plug,
+  Palette,
+  Brain,
+  Bell,
+  Users,
+  Code,
+};
 
-const integrations = [
+/** Map notification preference keys to display properties */
+const notificationItems: {
+  key: string;
+  title: string;
+  desc: string;
+  on: boolean;
+}[] = [
   {
-    name: "Google Calendar",
-    desc: "Two-way calendar sync",
-    connected: true,
+    key: "emailConfirmations",
+    title: "Email confirmations",
+    desc: "Send confirmation emails to clients when they book",
+    on: demoNotificationPrefs.emailConfirmations,
   },
   {
-    name: "Google Meet",
-    desc: "Auto-generate meeting links",
-    connected: true,
+    key: "emailReminders",
+    title: "Email reminders",
+    desc: "Send reminder emails 24h and 1h before meetings",
+    on: demoNotificationPrefs.emailReminders,
   },
   {
-    name: "WhatsApp Business",
-    desc: "Booking bot and notifications",
-    connected: true,
+    key: "whatsappReminders",
+    title: "WhatsApp reminders",
+    desc: "Send WhatsApp reminders for clients who booked via WhatsApp",
+    on: demoNotificationPrefs.whatsappReminders,
   },
   {
-    name: "Stripe",
-    desc: "Payment processing",
-    connected: true,
+    key: "slackNotifications",
+    title: "Slack notifications",
+    desc: "Get notified in Slack when new bookings arrive",
+    on: demoNotificationPrefs.slackNotifications,
   },
-  { name: "Slack", desc: "Booking notifications", connected: false },
-  { name: "HubSpot", desc: "CRM sync", connected: false },
-  { name: "Zapier", desc: "Connect 5000+ apps", connected: false },
+  {
+    key: "dailyDigest",
+    title: "Daily digest",
+    desc: "Receive a daily summary of upcoming meetings",
+    on: demoNotificationPrefs.dailyDigest,
+  },
 ];
 
 export default function SettingsPage() {
@@ -62,20 +86,23 @@ export default function SettingsPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-8 border-b border-border pb-px">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition relative ${
-              activeTab === tab.id
-                ? "text-text bg-bg-card border border-border border-b-bg-card -mb-px"
-                : "text-text-sec hover:text-text"
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-          </button>
-        ))}
+        {settingsTabs.map((tab) => {
+          const Icon = iconMap[tab.icon];
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition relative ${
+                activeTab === tab.id
+                  ? "text-text bg-bg-card border border-border border-b-bg-card -mb-px"
+                  : "text-text-sec hover:text-text"
+              }`}
+            >
+              {Icon && <Icon className="w-4 h-4" />}
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Profile Tab */}
@@ -83,7 +110,7 @@ export default function SettingsPage() {
         <div className="max-w-2xl">
           <div className="flex items-start gap-6 mb-8">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-violet flex items-center justify-center text-2xl font-bold shrink-0">
-              M
+              {demoUser.name.charAt(0)}
             </div>
             <div className="flex-1">
               <h3 className="font-semibold mb-1">Profile Photo</h3>
@@ -103,7 +130,7 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                defaultValue="MantaRay Digital"
+                defaultValue={demoUser.name}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition"
               />
             </div>
@@ -113,11 +140,11 @@ export default function SettingsPage() {
               </label>
               <div className="flex items-center gap-0">
                 <span className="px-4 py-3 rounded-l-lg border border-r-0 border-border bg-bg-raised text-sm text-text-muted">
-                  llamame.io/
+                  {appConfig.domain}/
                 </span>
                 <input
                   type="text"
-                  defaultValue="mantaray"
+                  defaultValue={demoUser.handle}
                   className="flex-1 px-4 py-3 rounded-r-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition"
                 />
               </div>
@@ -128,7 +155,7 @@ export default function SettingsPage() {
               </label>
               <input
                 type="email"
-                defaultValue="hello@mantaray.digital"
+                defaultValue={demoUser.email}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition"
               />
             </div>
@@ -137,16 +164,17 @@ export default function SettingsPage() {
                 Timezone
               </label>
               <select className="w-full px-4 py-3 rounded-lg border border-border bg-bg-card text-text text-sm outline-none focus:border-accent transition cursor-pointer">
-                <option>America/New_York (EST)</option>
-                <option>America/Chicago (CST)</option>
-                <option>America/Los_Angeles (PST)</option>
-                <option>Europe/London (GMT)</option>
+                {timezones.map((tz) => (
+                  <option key={tz.value} value={tz.value}>
+                    {tz.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Bio</label>
               <textarea
-                defaultValue="Digital marketing consultancy helping brands grow through data-driven strategies."
+                defaultValue={demoUser.branding?.bio ?? ""}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-white/[0.03] text-text text-sm outline-none focus:border-accent transition min-h-[100px] resize-y"
               />
             </div>
@@ -160,34 +188,39 @@ export default function SettingsPage() {
       {/* Integrations Tab */}
       {activeTab === "integrations" && (
         <div className="max-w-2xl space-y-3">
-          {integrations.map((int) => (
-            <div
-              key={int.name}
-              className="flex items-center gap-4 p-4 rounded-xl border border-border bg-bg-card"
-            >
-              <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-border flex items-center justify-center text-text-sec">
-                <Plug className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold">{int.name}</div>
-                <div className="text-xs text-text-muted">{int.desc}</div>
-              </div>
-              {int.connected ? (
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-muted text-green">
-                    <Check className="w-3 h-3" /> Connected
-                  </span>
-                  <button className="text-xs text-text-muted hover:text-rose transition">
-                    Disconnect
-                  </button>
+          {integrations.map((int) => {
+            const isConnected = demoConnectedIntegrations.includes(int.provider);
+            return (
+              <div
+                key={int.provider}
+                className="flex items-center gap-4 p-4 rounded-xl border border-border bg-bg-card"
+              >
+                <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-border flex items-center justify-center text-text-sec">
+                  <Plug className="w-5 h-5" />
                 </div>
-              ) : (
-                <button className="px-4 py-2 rounded-lg text-sm font-medium bg-white/[0.03] border border-border hover:bg-bg-card-hover hover:border-border-hover transition">
-                  Connect
-                </button>
-              )}
-            </div>
-          ))}
+                <div className="flex-1">
+                  <div className="text-sm font-semibold">{int.name}</div>
+                  <div className="text-xs text-text-muted">
+                    {int.description}
+                  </div>
+                </div>
+                {isConnected ? (
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-muted text-green">
+                      <Check className="w-3 h-3" /> Connected
+                    </span>
+                    <button className="text-xs text-text-muted hover:text-rose transition">
+                      Disconnect
+                    </button>
+                  </div>
+                ) : (
+                  <button className="px-4 py-2 rounded-lg text-sm font-medium bg-white/[0.03] border border-border hover:bg-bg-card-hover hover:border-border-hover transition">
+                    Connect
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -214,12 +247,7 @@ export default function SettingsPage() {
               Map meeting types to your energy levels throughout the day.
             </p>
             <div className="space-y-3 mt-4">
-              {[
-                { label: "Morning (9-11am)", level: 90, color: "bg-green" },
-                { label: "Midday (11am-1pm)", level: 70, color: "bg-accent" },
-                { label: "Afternoon (1-4pm)", level: 50, color: "bg-amber" },
-                { label: "Late (4-6pm)", level: 30, color: "bg-rose" },
-              ].map((period) => (
+              {demoEnergyBlocks.map((period) => (
                 <div key={period.label} className="flex items-center gap-4">
                   <span className="text-sm text-text-sec w-40">
                     {period.label}
@@ -262,18 +290,12 @@ export default function SettingsPage() {
               Accent Color
             </label>
             <div className="flex gap-2">
-              {[
-                "#22d3ee",
-                "#a78bfa",
-                "#4ade80",
-                "#fb7185",
-                "#fbbf24",
-                "#3b82f6",
-              ].map((color) => (
+              {defaults.accentColors.map((color) => (
                 <button
-                  key={color}
+                  key={color.value}
                   className="w-10 h-10 rounded-lg border-2 border-transparent hover:border-white/30 transition"
-                  style={{ background: color }}
+                  style={{ background: color.value }}
+                  title={color.name}
                 />
               ))}
             </div>
@@ -300,35 +322,9 @@ export default function SettingsPage() {
       {/* Notifications Tab */}
       {activeTab === "notifications" && (
         <div className="max-w-2xl space-y-3">
-          {[
-            {
-              title: "Email confirmations",
-              desc: "Send confirmation emails to clients when they book",
-              on: true,
-            },
-            {
-              title: "Email reminders",
-              desc: "Send reminder emails 24h and 1h before meetings",
-              on: true,
-            },
-            {
-              title: "WhatsApp reminders",
-              desc: "Send WhatsApp reminders for clients who booked via WhatsApp",
-              on: true,
-            },
-            {
-              title: "Slack notifications",
-              desc: "Get notified in Slack when new bookings arrive",
-              on: false,
-            },
-            {
-              title: "Daily digest",
-              desc: "Receive a daily summary of upcoming meetings",
-              on: true,
-            },
-          ].map((notif) => (
+          {notificationItems.map((notif) => (
             <div
-              key={notif.title}
+              key={notif.key}
               className="flex items-center gap-4 p-4 rounded-xl border border-border bg-bg-card"
             >
               <div className="flex-1">
@@ -386,7 +382,7 @@ export default function SettingsPage() {
             <p className="text-sm text-text-sec">
               API documentation is available at{" "}
               <span className="text-accent font-mono text-xs">
-                docs.llamame.io/api
+                {appConfig.docsUrl}
               </span>
             </p>
           </div>
