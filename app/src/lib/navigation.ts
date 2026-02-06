@@ -30,16 +30,16 @@ export const dashboardNav: NavGroup[] = [
     items: [
       { label: "Dashboard", href: "/dashboard", icon: "Home" },
       { label: "Event Types", href: "/dashboard/events", icon: "Calendar" },
-      { label: "Calendar", href: "/dashboard/calendar", icon: "CalendarDays", comingSoon: true },
-      { label: "Clients", href: "/dashboard/clients", icon: "Users", comingSoon: true },
+      { label: "Calendar", href: "/dashboard/calendar", icon: "CalendarDays" },
+      { label: "Clients", href: "/dashboard/clients", icon: "Users" },
       { label: "Messages", href: "/dashboard/messages", icon: "MessageCircle", comingSoon: true, badge: "Soon" },
     ],
   },
   {
     items: [
-      { label: "Payments", href: "/dashboard/payments", icon: "DollarSign", requiredPlan: "pro", comingSoon: true },
-      { label: "Analytics", href: "/dashboard/analytics", icon: "BarChart3", comingSoon: true },
-      { label: "Workflows", href: "/dashboard/workflows", icon: "Zap", requiredPlan: "pro", comingSoon: true },
+      { label: "Payments", href: "/dashboard/payments", icon: "DollarSign", requiredPlan: "pro" },
+      { label: "Analytics", href: "/dashboard/analytics", icon: "BarChart3" },
+      { label: "Workflows", href: "/dashboard/workflows", icon: "Zap", requiredPlan: "pro" },
     ],
   },
   {
