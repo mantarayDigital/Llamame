@@ -68,6 +68,7 @@ const pricingPlans = plans
     desc: p.description,
     features: p.features,
     cta: p.ctaLabel,
+    ctaHref: p.ctaHref,
     featured: p.featured,
   }));
 
@@ -711,7 +712,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/booking"
+                  href={plan.ctaHref}
                   className={`w-full ${plan.featured ? btn.primary : btn.secondary}`}
                 >
                   {plan.cta}

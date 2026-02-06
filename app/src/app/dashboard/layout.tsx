@@ -8,6 +8,7 @@ import {
   DollarSign,
   BarChart3,
   Zap,
+  CreditCard,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const iconMap: Record<string, LucideIcon> = {
   DollarSign,
   BarChart3,
   Zap,
+  CreditCard,
   Settings,
 };
 

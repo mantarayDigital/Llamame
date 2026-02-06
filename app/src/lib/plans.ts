@@ -98,7 +98,7 @@ export const plans: PlanDefinition[] = [
     description: "AI scheduling, all integrations, and full customization.",
     featured: true,
     ctaLabel: "Start free trial",
-    ctaHref: "/auth/signup?plan=pro",
+    ctaHref: "/dashboard/billing",
     limits: {
       maxEventTypes: 0,
       maxBookingsPerMonth: 0,
