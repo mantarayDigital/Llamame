@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Llamame - Smart Scheduling, Redefined</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent-1: #ff6b4a;
+            --accent-2: #a855f7;
+            --accent-3: #06b6d4;
+            --gradient-primary: linear-gradient(135deg, #ff6b4a, #a855f7);
+            --gradient-secondary: linear-gradient(135deg, #a855f7, #06b6d4);
+            --gradient-warm: linear-gradient(135deg, #ff6b4a, #ff9a5c);
+            --gradient-cool: linear-gradient(135deg, #06b6d4, #a855f7);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-lg: 24px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.3);
+            --shadow-glow: 0 0 60px rgba(168, 85, 247, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+
+        /* Animated gradient background orbs */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-orb-1 { width: 600px; height: 600px; background: var(--accent-1); top: -200px; right: -200px; animation: float 20s ease-in-out infinite; }
+        .bg-orb-2 { width: 500px; height: 500px; background: var(--accent-2); bottom: -100px; left: -200px; animation: float 25s ease-in-out infinite reverse; }
+        .bg-orb-3 { width: 400px; height: 400px; background: var(--accent-3); top: 50%; left: 50%; transform: translate(-50%, -50%); animation: float 30s ease-in-out infinite; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -40px) scale(1.05); }
+            50% { transform: translate(-20px, 30px) scale(0.95); }
+            75% { transform: translate(40px, 20px) scale(1.02); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 40px;
+            backdrop-filter: blur(20px);
+            background: rgba(10, 10, 15, 0.7);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .nav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            -webkit-text-fill-color: var(--text-primary);
+            opacity: 0.4;
+            font-weight: 400;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--text-primary); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 107, 74, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 107, 74, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--glass);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 10px 16px;
+        }
+
+        .btn-ghost:hover { color: var(--text-primary); }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 40px 80px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+            max-width: 900px;
+        }
+
+        .hero h1 .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin-bottom: 48px;
+            line-height: 1.7;
+        }
+
+        .hero-cta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 80px;
+        }
+
+        /* Hero Preview Card */
+        .hero-preview {
+            width: 100%;
+            max-width: 1000px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            box-shadow: var(--shadow), var(--shadow-glow);
+            position: relative;
+        }
+
+        .preview-topbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .preview-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .preview-dot:nth-child(1) { background: #ff5f57; }
+        .preview-dot:nth-child(2) { background: #febc2e; }
+        .preview-dot:nth-child(3) { background: #28c840; }
+
+        .preview-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 420px;
+        }
+
+        .preview-sidebar {
+            padding: 24px;
+            border-right: 1px solid var(--glass-border);
+        }
+
+        .preview-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .preview-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .preview-handle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .preview-event-type {
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .preview-event-type:hover {
+            border-color: var(--accent-2);
+            background: rgba(168, 85, 247, 0.08);
+        }
+
+        .preview-event-type .event-color {
+            width: 4px;
+            height: 24px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+
+        .preview-event-type .event-info {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .preview-event-type .event-info strong {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .preview-event-type .event-info span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .preview-calendar {
+            padding: 24px;
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .calendar-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-nav button {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .calendar-grid .day-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .calendar-grid .day {
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .calendar-grid .day:hover {
+            background: var(--glass);
+            color: var(--text-primary);
+        }
+
+        .calendar-grid .day.available {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .calendar-grid .day.selected {
+            background: var(--gradient-primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-grid .day.disabled {
+            color: var(--text-muted);
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .time-slot {
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-slot:hover {
+            border-color: var(--accent-1);
+            background: rgba(255, 107, 74, 0.1);
+            color: var(--accent-1);
+        }
+
+        .time-slot.active {
+            background: var(--gradient-primary);
+            border-color: transparent;
+            color: white;
+        }
+
+        /* Features Section */
+        section {
+            position: relative;
+            z-index: 1;
+            padding: 100px 40px;
+        }
+
+        .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-2);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            line-height: 1.15;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 550px;
+            margin-bottom: 64px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .feature-card {
+            padding: 32px;
+            border-radius: var(--radius);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(255,255,255,0.12);
+            background: var(--bg-card-hover);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+        }
+
+        .feature-card:hover::before { opacity: 1; }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .feature-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 16px;
+        }
+
+        .tag-unique {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent-2);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .tag-ai {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent-3);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .tag-core {
+            background: rgba(255, 107, 74, 0.15);
+            color: var(--accent-1);
+            border: 1px solid rgba(255, 107, 74, 0.3);
+        }
+
+        /* Unique Differentiators Section */
+        .diff-section {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .diff-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .diff-visual {
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            padding: 32px;
+            position: relative;
+        }
+
+        .ai-chat-preview {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai-msg {
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            max-width: 85%;
+            line-height: 1.5;
+        }
+
+        .ai-msg.user {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            align-self: flex-end;
+            color: var(--text-secondary);
+        }
+
+        .ai-msg.assistant {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(6, 182, 212, 0.1));
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            align-self: flex-start;
+        }
+
+        .ai-msg .ai-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-2);
+            margin-bottom: 6px;
+        }
+
+        .diff-features {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .diff-item {
+            display: flex;
+            gap: 16px;
+        }
+
+        .diff-item-icon {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .diff-item h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .diff-item p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Integrations Section */
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .integration-card {
+            padding: 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .integration-card:hover {
+            border-color: rgba(255,255,255,0.12);
+            transform: translateY(-2px);
+        }
+
+        .integration-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .integration-card h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .integration-card p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Pricing Section */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .pricing-card {
+            padding: 36px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent-2);
+            background: linear-gradient(180deg, rgba(168, 85, 247, 0.08), var(--bg-card));
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.1);
+        }
+
+        .pricing-card.featured::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 16px;
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .pricing-tier {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .pricing-price {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .pricing-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .pricing-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .pricing-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 36px;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .pricing-features li .check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .pricing-card .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Social Proof */
+        .social-proof {
+            text-align: center;
+        }
+
+        .avatars-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .avatar-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid var(--bg-primary);
+            margin-left: -12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 48px;
+            text-align: left;
+        }
+
+        .testimonial-card {
+            padding: 28px;
+            border-radius: var(--radius);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+        }
+
+        .testimonial-card .stars {
+            color: #fbbf24;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .testimonial-card blockquote {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .testimonial-author .ta-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        .testimonial-author .ta-info strong {
+            display: block;
+            font-size: 0.85rem;
+        }
+
+        .testimonial-author .ta-info span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+        }
+
+        .cta-box {
+            padding: 80px 60px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, rgba(255, 107, 74, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(255, 107, 74, 0.08), transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(168, 85, 247, 0.08), transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .cta-box > * { position: relative; z-index: 1; }
+
+        .cta-box h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .cta-box p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 36px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 60px 40px 30px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: 40px;
+            margin-bottom: 48px;
+        }
+
+        .footer-brand .logo { margin-bottom: 12px; }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            max-width: 280px;
+        }
+
+        .footer-col h4 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .footer-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-col a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-col a:hover { color: var(--text-primary); }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 24px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Mockup Navigation Bar */
+        .mockup-nav {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .mockup-nav a {
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .mockup-nav a:hover { color: var(--text-primary); background: var(--glass); }
+        .mockup-nav a.active {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .features-grid, .pricing-grid, .testimonial-grid { grid-template-columns: 1fr; }
+            .integrations-grid { grid-template-columns: repeat(2, 1fr); }
+            .diff-grid { grid-template-columns: 1fr; }
+            .preview-content { grid-template-columns: 1fr; }
+            .preview-sidebar { border-right: none; border-bottom: 1px solid var(--glass-border); }
+            .footer-inner { grid-template-columns: 1fr; }
+            nav { padding: 12px 20px; }
+            section { padding: 60px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background orbs -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-inner">
+            <div class="logo">Llamame <span>by MantaRay</span></div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#integrations">Integrations</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="dashboard.html" class="btn btn-ghost">Log in</a></li>
+                <li><a href="booking.html" class="btn btn-primary">Get Started Free</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="dot"></span>
+            Now with AI-powered smart scheduling
+        </div>
+
+        <h1>
+            Scheduling that<br>
+            <span class="gradient-text">actually gets you</span>
+        </h1>
+
+        <p>
+            Llamame learns your preferences, respects your energy, and books meetings that work for everyone. Not just another calendar link.
+        </p>
+
+        <div class="hero-cta">
+            <a href="booking.html" class="btn btn-primary">
+                Start for free
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="#features" class="btn btn-secondary">See how it works</a>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="hero-preview">
+            <div class="preview-topbar">
+                <div class="preview-dot"></div>
+                <div class="preview-dot"></div>
+                <div class="preview-dot"></div>
+            </div>
+            <div class="preview-content">
+                <div class="preview-sidebar">
+                    <div class="preview-avatar">M</div>
+                    <div class="preview-name">MantaRay Digital</div>
+                    <div class="preview-handle">llamame.io/mantaray</div>
+
+                    <div class="preview-event-type">
+                        <span class="event-color" style="background: var(--accent-1)"></span>
+                        <div class="event-info">
+                            <strong>Discovery Call</strong>
+                            <span>30 min &middot; Video</span>
+                        </div>
+                    </div>
+                    <div class="preview-event-type">
+                        <span class="event-color" style="background: var(--accent-2)"></span>
+                        <div class="event-info">
+                            <strong>Strategy Session</strong>
+                            <span>60 min &middot; Video</span>
+                        </div>
+                    </div>
+                    <div class="preview-event-type">
+                        <span class="event-color" style="background: var(--accent-3)"></span>
+                        <div class="event-info">
+                            <strong>Quick Check-in</strong>
+                            <span>15 min &middot; Phone</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-calendar">
+                    <div class="calendar-header">
+                        <h3>February 2026</h3>
+                        <div class="calendar-nav">
+                            <button>&larr;</button>
+                            <button>&rarr;</button>
+                        </div>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="day-label">Mon</div>
+                        <div class="day-label">Tue</div>
+                        <div class="day-label">Wed</div>
+                        <div class="day-label">Thu</div>
+                        <div class="day-label">Fri</div>
+                        <div class="day-label">Sat</div>
+                        <div class="day-label">Sun</div>
+                        <div class="day disabled"></div>
+                        <div class="day disabled"></div>
+                        <div class="day disabled"></div>
+                        <div class="day disabled"></div>
+                        <div class="day disabled"></div>
+                        <div class="day disabled"></div>
+                        <div class="day disabled">1</div>
+                        <div class="day disabled">2</div>
+                        <div class="day disabled">3</div>
+                        <div class="day disabled">4</div>
+                        <div class="day disabled">5</div>
+                        <div class="day available">6</div>
+                        <div class="day available">7</div>
+                        <div class="day available">8</div>
+                        <div class="day available">9</div>
+                        <div class="day selected">10</div>
+                        <div class="day available">11</div>
+                        <div class="day available">12</div>
+                        <div class="day available">13</div>
+                        <div class="day">14</div>
+                        <div class="day">15</div>
+                        <div class="day available">16</div>
+                        <div class="day available">17</div>
+                        <div class="day available">18</div>
+                        <div class="day available">19</div>
+                        <div class="day available">20</div>
+                        <div class="day">21</div>
+                        <div class="day">22</div>
+                        <div class="day available">23</div>
+                        <div class="day available">24</div>
+                        <div class="day available">25</div>
+                        <div class="day available">26</div>
+                        <div class="day available">27</div>
+                        <div class="day">28</div>
+                    </div>
+                    <div class="time-slots">
+                        <div class="time-slot">9:00 AM</div>
+                        <div class="time-slot active">10:30 AM</div>
+                        <div class="time-slot">11:00 AM</div>
+                        <div class="time-slot">1:00 PM</div>
+                        <div class="time-slot">2:30 PM</div>
+                        <div class="time-slot">4:00 PM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+        <div class="section-inner">
+            <span class="section-label">Features</span>
+            <h2 class="section-title">Everything you need.<br>Nothing you don't.</h2>
+            <p class="section-desc">Beyond basic scheduling — Llamame gives you intelligent tools to manage your time, delight your clients, and grow your business.</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(255,107,74,0.12)">&#128197;</div>
+                    <h3>Smart Availability</h3>
+                    <p>Set complex availability rules, buffer times, daily limits, and seasonal schedules. Your calendar, your rules.</p>
+                    <span class="feature-tag tag-core">Core</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(168,85,247,0.12)">&#129504;</div>
+                    <h3>AI Meeting Prep</h3>
+                    <p>Get auto-generated briefs before each meeting with client history, notes from past calls, and suggested talking points.</p>
+                    <span class="feature-tag tag-ai">AI Powered</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(6,182,212,0.12)">&#127758;</div>
+                    <h3>Multi-Timezone IQ</h3>
+                    <p>Auto-detect client timezones, show availability in their local time, and prevent awkward 3 AM bookings.</p>
+                    <span class="feature-tag tag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(251,191,36,0.12)">&#128172;</div>
+                    <h3>WhatsApp Booking</h3>
+                    <p>Let clients book directly through WhatsApp with a conversational bot. Meet them where they already are.</p>
+                    <span class="feature-tag tag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(74,222,128,0.12)">&#9889;</div>
+                    <h3>Vibe Check Intake</h3>
+                    <p>Customizable pre-meeting questionnaires that gauge client mood, goals, and expectations before you even say hello.</p>
+                    <span class="feature-tag tag-unique">Unique</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(239,68,68,0.12)">&#128176;</div>
+                    <h3>Payments Built-in</h3>
+                    <p>Collect payments at booking time via Stripe, PayPal, or crypto. Deposits, full payments, or pay-what-you-want.</p>
+                    <span class="feature-tag tag-core">Core</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(99,102,241,0.12)">&#128257;</div>
+                    <h3>Smart Workflows</h3>
+                    <p>Trigger emails, SMS, Slack messages, and CRM updates automatically based on booking events.</p>
+                    <span class="feature-tag tag-core">Core</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(236,72,153,0.12)">&#127912;</div>
+                    <h3>Brand Studio</h3>
+                    <p>Custom booking pages with your colors, logo, fonts, and even custom CSS. Make it look like yours, because it is.</p>
+                    <span class="feature-tag tag-core">Core</span>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background: rgba(34,211,238,0.12)">&#128200;</div>
+                    <h3>Client Intelligence</h3>
+                    <p>Track meeting history, no-show rates, rebooking patterns, and client lifetime value. Know your clients deeply.</p>
+                    <span class="feature-tag tag-ai">AI Powered</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Unique Differentiators Section -->
+    <section class="diff-section" id="unique">
+        <div class="section-inner">
+            <div class="diff-grid">
+                <div>
+                    <span class="section-label">What Makes Us Different</span>
+                    <h2 class="section-title" style="margin-bottom: 32px;">Your AI scheduling<br>co-pilot</h2>
+
+                    <div class="diff-features">
+                        <div class="diff-item">
+                            <div class="diff-item-icon" style="background: rgba(168,85,247,0.12)">&#128161;</div>
+                            <div>
+                                <h4>Energy-Aware Scheduling</h4>
+                                <p>Tell Llamame when you're a morning person or night owl. It'll prioritize deep-work calls during your peak hours and save admin calls for low-energy slots.</p>
+                            </div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-item-icon" style="background: rgba(255,107,74,0.12)">&#128293;</div>
+                            <div>
+                                <h4>Meeting Fatigue Protection</h4>
+                                <p>Auto-detects when you're overbooked and suggests rescheduling non-urgent meetings. Prevents burnout before it happens.</p>
+                            </div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-item-icon" style="background: rgba(6,182,212,0.12)">&#127891;</div>
+                            <div>
+                                <h4>Client Memory</h4>
+                                <p>Remembers every interaction with each client. Notes, preferences, past meeting summaries — all surfaced automatically before your next call.</p>
+                            </div>
+                        </div>
+                        <div class="diff-item">
+                            <div class="diff-item-icon" style="background: rgba(74,222,128,0.12)">&#128640;</div>
+                            <div>
+                                <h4>Smart Rescheduling</h4>
+                                <p>When a client cancels, Llamame finds the next best time for both parties and sends a one-click reschedule link. Zero back-and-forth.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="diff-visual">
+                    <div class="ai-chat-preview">
+                        <div class="ai-msg assistant">
+                            <div class="ai-label">&#10024; Llamame AI</div>
+                            Hey, I noticed you have 6 meetings tomorrow with zero breaks. Want me to suggest some buffer time?
+                        </div>
+                        <div class="ai-msg user">
+                            Yes please, and move the non-urgent ones to Thursday
+                        </div>
+                        <div class="ai-msg assistant">
+                            <div class="ai-label">&#10024; Llamame AI</div>
+                            Done! I moved 2 check-in calls to Thursday afternoon (their preferred time anyway). Tomorrow now has 30-min buffers between deep-work sessions. Your energy score just went from &#128308; to &#128994;
+                        </div>
+                        <div class="ai-msg user">
+                            What about the strategy call with Alex?
+                        </div>
+                        <div class="ai-msg assistant">
+                            <div class="ai-label">&#10024; Llamame AI</div>
+                            Alex prefers mornings and your energy peaks at 10 AM. I kept it at 10:00 - 11:00 AM. Here's a quick brief: Last meeting you discussed Q1 roadmap. Alex mentioned wanting to revisit budget allocation.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section id="integrations">
+        <div class="section-inner">
+            <span class="section-label">Integrations</span>
+            <h2 class="section-title">Plays nice with<br>your entire stack</h2>
+            <p class="section-desc">Connect Llamame with the tools you already use. One-click setup, real-time sync.</p>
+
+            <div class="integrations-grid">
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(66,133,244,0.12)">&#128197;</div>
+                    <h4>Google Calendar</h4>
+                    <p>Two-way sync</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(0,120,212,0.12)">&#128231;</div>
+                    <h4>Outlook / O365</h4>
+                    <p>Calendar & email</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(37,99,235,0.12)">&#128249;</div>
+                    <h4>Zoom</h4>
+                    <p>Auto-create meetings</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(99,102,241,0.12)">&#128225;</div>
+                    <h4>Google Meet</h4>
+                    <p>Auto-create links</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(74,21,75,0.12)">&#128172;</div>
+                    <h4>Slack</h4>
+                    <p>Notifications & booking</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(37,211,102,0.12)">&#128241;</div>
+                    <h4>WhatsApp</h4>
+                    <p>Chat-based booking</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(99,91,255,0.12)">&#128179;</div>
+                    <h4>Stripe</h4>
+                    <p>Payment collection</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(0,112,243,0.12)">&#128178;</div>
+                    <h4>PayPal</h4>
+                    <p>Payment alternative</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(255,111,97,0.12)">&#128232;</div>
+                    <h4>Mailchimp</h4>
+                    <p>Auto-add to lists</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(255,119,0,0.12)">&#128736;</div>
+                    <h4>HubSpot</h4>
+                    <p>CRM sync</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(0,176,244,0.12)">&#9889;</div>
+                    <h4>Zapier</h4>
+                    <p>5000+ app connections</p>
+                </div>
+                <div class="integration-card">
+                    <div class="integration-icon" style="background: rgba(248,113,113,0.12)">&#128202;</div>
+                    <h4>Notion</h4>
+                    <p>Auto meeting notes</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing">
+        <div class="section-inner">
+            <div style="text-align: center; margin-bottom: 64px;">
+                <span class="section-label">Pricing</span>
+                <h2 class="section-title">Simple, transparent pricing</h2>
+                <p class="section-desc" style="margin: 16px auto 0;">Start free. Scale when you're ready. No surprises.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-tier">Free</div>
+                    <div class="pricing-price">$0 <span>/ month</span></div>
+                    <p class="pricing-desc">Perfect for individuals just getting started with smart scheduling.</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">&#10003;</span> 1 event type</li>
+                        <li><span class="check">&#10003;</span> Basic availability settings</li>
+                        <li><span class="check">&#10003;</span> Google Calendar sync</li>
+                        <li><span class="check">&#10003;</span> Email notifications</li>
+                        <li><span class="check">&#10003;</span> Llamame branding</li>
+                        <li><span class="check">&#10003;</span> Booking page</li>
+                    </ul>
+                    <a href="#" class="btn btn-secondary">Get Started</a>
+                </div>
+
+                <div class="pricing-card featured">
+                    <div class="pricing-tier">Pro</div>
+                    <div class="pricing-price">$12 <span>/ month</span></div>
+                    <p class="pricing-desc">For professionals who want AI-powered scheduling and integrations.</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">&#10003;</span> Unlimited event types</li>
+                        <li><span class="check">&#10003;</span> AI Meeting Prep & Briefs</li>
+                        <li><span class="check">&#10003;</span> All calendar integrations</li>
+                        <li><span class="check">&#10003;</span> WhatsApp booking bot</li>
+                        <li><span class="check">&#10003;</span> Payment collection</li>
+                        <li><span class="check">&#10003;</span> Vibe Check intake forms</li>
+                        <li><span class="check">&#10003;</span> Custom branding</li>
+                        <li><span class="check">&#10003;</span> Smart workflows</li>
+                        <li><span class="check">&#10003;</span> Energy-aware scheduling</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary">Start Free Trial</a>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="pricing-tier">Team</div>
+                    <div class="pricing-price">$24 <span>/ seat / mo</span></div>
+                    <p class="pricing-desc">For teams that need round-robin, collective booking, and analytics.</p>
+                    <ul class="pricing-features">
+                        <li><span class="check">&#10003;</span> Everything in Pro</li>
+                        <li><span class="check">&#10003;</span> Team scheduling (round-robin)</li>
+                        <li><span class="check">&#10003;</span> Collective availability</li>
+                        <li><span class="check">&#10003;</span> Client Intelligence dashboard</li>
+                        <li><span class="check">&#10003;</span> CRM integrations</li>
+                        <li><span class="check">&#10003;</span> Advanced analytics</li>
+                        <li><span class="check">&#10003;</span> API access</li>
+                        <li><span class="check">&#10003;</span> Priority support</li>
+                    </ul>
+                    <a href="#" class="btn btn-secondary">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="social-proof">
+        <div class="section-inner">
+            <span class="section-label">Loved by professionals</span>
+            <h2 class="section-title">Join thousands who schedule smarter</h2>
+
+            <div class="avatars-row">
+                <div class="avatar-circle" style="background: var(--gradient-primary)">JR</div>
+                <div class="avatar-circle" style="background: var(--gradient-secondary)">AK</div>
+                <div class="avatar-circle" style="background: var(--gradient-warm)">LS</div>
+                <div class="avatar-circle" style="background: var(--gradient-cool)">MP</div>
+                <div class="avatar-circle" style="background: var(--gradient-primary)">TC</div>
+                <div class="avatar-circle" style="background: var(--gradient-secondary)">+2k</div>
+            </div>
+
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <blockquote>"The AI meeting briefs alone are worth it. I walk into every call knowing exactly what to discuss. My clients think I have superhuman memory."</blockquote>
+                    <div class="testimonial-author">
+                        <div class="ta-avatar" style="background: var(--gradient-primary)">JR</div>
+                        <div class="ta-info">
+                            <strong>Jamie Rodriguez</strong>
+                            <span>Business Coach</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <blockquote>"WhatsApp booking changed everything for my Latin American clients. They don't want to visit a website — they want to text. Llamame gets it."</blockquote>
+                    <div class="testimonial-author">
+                        <div class="ta-avatar" style="background: var(--gradient-secondary)">AK</div>
+                        <div class="ta-info">
+                            <strong>Ana Kovacs</strong>
+                            <span>Marketing Consultant</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                    <blockquote>"The energy-aware scheduling is genius. No more back-to-back-to-back calls that leave me drained. My calendar finally works FOR me."</blockquote>
+                    <div class="testimonial-author">
+                        <div class="ta-avatar" style="background: var(--gradient-warm)">LS</div>
+                        <div class="ta-info">
+                            <strong>Lucas Sharma</strong>
+                            <span>UX Designer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="section-inner">
+            <div class="cta-box">
+                <h2>Ready to schedule smarter?</h2>
+                <p>Join the professionals who've reclaimed their calendar. Setup takes less than 2 minutes.</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <a href="booking.html" class="btn btn-primary">
+                        Start for free
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                    <a href="#" class="btn btn-secondary">Book a demo</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="logo">Llamame</div>
+                <p>Smart scheduling for professionals who value their time and their clients' experience.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#integrations">Integrations</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#">API</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                    <li><a href="#">Security</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>&copy; 2026 Llamame by MantaRay Digital. All rights reserved.</span>
+            <span>Made with &#10084;&#65039; for professionals who value their time</span>
+        </div>
+    </footer>
+
+    <!-- Mockup Navigation -->
+    <div class="mockup-nav">
+        <a href="index.html" class="active">Landing</a>
+        <a href="booking.html">Booking</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="event-editor.html">Event Editor</a>
+        <a href="confirmation.html">Confirmation</a>
+        <a href="settings.html">Settings</a>
+    </div>
+
+</body>
+</html>

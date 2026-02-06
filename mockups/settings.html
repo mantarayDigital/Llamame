@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Llamame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent-1: #ff6b4a;
+            --accent-2: #a855f7;
+            --accent-3: #06b6d4;
+            --green: #4ade80;
+            --yellow: #fbbf24;
+            --red: #f87171;
+            --gradient-primary: linear-gradient(135deg, #ff6b4a, #a855f7);
+            --gradient-secondary: linear-gradient(135deg, #a855f7, #06b6d4);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-lg: 24px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; }
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+
+        .sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0; width: 260px;
+            background: var(--bg-secondary); border-right: 1px solid var(--glass-border);
+            display: flex; flex-direction: column; padding: 24px 16px; z-index: 50;
+        }
+        .sidebar-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding: 0 12px; margin-bottom: 32px; }
+        .sidebar-nav { list-style: none; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .sidebar-nav li a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        .sidebar-nav li a:hover { background: var(--glass); color: var(--text-primary); }
+        .sidebar-nav li a.active { background: rgba(168, 85, 247, 0.1); color: var(--text-primary); border: 1px solid rgba(168, 85, 247, 0.2); }
+        .sidebar-nav li a .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+        .sidebar-nav .nav-divider { height: 1px; background: var(--glass-border); margin: 12px 0; }
+        .sidebar-user { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass); }
+        .sidebar-user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+        .sidebar-user-info { flex: 1; min-width: 0; }
+        .sidebar-user-info strong { display: block; font-size: 0.85rem; font-weight: 600; }
+        .sidebar-user-info span { font-size: 0.75rem; color: var(--text-muted); }
+
+        .main { margin-left: 260px; padding: 32px; min-height: 100vh; max-width: 1100px; }
+
+        .page-header { margin-bottom: 32px; }
+        .page-header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+        .page-header p { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* Settings Tabs */
+        .settings-tabs {
+            display: flex; gap: 4px; padding: 4px; background: var(--glass);
+            border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+            margin-bottom: 32px; width: fit-content;
+        }
+
+        .settings-tab {
+            padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 500;
+            color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+            border: none; background: transparent; font-family: inherit;
+        }
+
+        .settings-tab:hover { color: var(--text-primary); }
+        .settings-tab.active { background: var(--gradient-primary); color: white; }
+
+        /* Settings Sections */
+        .settings-section {
+            border-radius: var(--radius); border: 1px solid var(--glass-border);
+            background: var(--bg-card); margin-bottom: 24px; overflow: hidden;
+        }
+
+        .settings-section-header {
+            padding: 24px; border-bottom: 1px solid var(--glass-border);
+        }
+
+        .settings-section-header h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
+        .settings-section-header p { font-size: 0.82rem; color: var(--text-muted); }
+
+        .settings-body { padding: 24px; }
+
+        /* Integration Cards */
+        .integrations-list { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+
+        .integration-row {
+            display: flex; align-items: center; gap: 16px; padding: 16px;
+            border-radius: var(--radius-sm); border: 1px solid var(--glass-border);
+            background: var(--glass); transition: all 0.2s;
+        }
+
+        .integration-row:hover { border-color: rgba(255,255,255,0.12); }
+
+        .integ-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
+
+        .integ-info { flex: 1; }
+        .integ-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+        .integ-desc { font-size: 0.78rem; color: var(--text-muted); }
+
+        .integ-status {
+            padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600;
+        }
+
+        .status-connected { background: rgba(74,222,128,0.12); color: var(--green); }
+        .status-disconnected { background: var(--glass); color: var(--text-muted); border: 1px solid var(--glass-border); }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 18px; border-radius: 50px; font-weight: 600; font-size: 0.82rem;
+            text-decoration: none; border: none; cursor: pointer; transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary { background: var(--gradient-primary); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); }
+        .btn-secondary { background: var(--glass); color: var(--text-primary); border: 1px solid var(--glass-border); }
+        .btn-sm { padding: 6px 14px; font-size: 0.78rem; }
+        .btn-connect { background: rgba(168,85,247,0.12); color: var(--accent-2); border: 1px solid rgba(168,85,247,0.2); }
+
+        /* Profile Settings */
+        .profile-grid { display: grid; grid-template-columns: 120px 1fr; gap: 24px; align-items: start; }
+
+        .avatar-upload {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: var(--gradient-primary); display: flex; align-items: center;
+            justify-content: center; font-size: 2.5rem; font-weight: 700;
+            position: relative; cursor: pointer;
+        }
+
+        .avatar-upload-overlay {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center;
+            justify-content: center; opacity: 0; transition: opacity 0.2s;
+            font-size: 0.7rem; font-weight: 600;
+        }
+
+        .avatar-upload:hover .avatar-upload-overlay { opacity: 1; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; }
+        .form-label .hint { color: var(--text-muted); font-weight: 400; }
+        .form-input {
+            width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border); background: var(--glass);
+            color: var(--text-primary); font-size: 0.9rem; font-family: inherit; outline: none;
+        }
+        .form-input:focus { border-color: var(--accent-2); }
+        .form-input::placeholder { color: var(--text-muted); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        /* Toggle Row */
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 0; border-bottom: 1px solid var(--glass-border);
+        }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-info { flex: 1; }
+        .toggle-label { font-size: 0.9rem; font-weight: 500; }
+        .toggle-desc { font-size: 0.78rem; color: var(--text-muted); }
+        .toggle {
+            width: 44px; height: 24px; border-radius: 12px;
+            background: rgba(255,255,255,0.1); position: relative; cursor: pointer; flex-shrink: 0;
+        }
+        .toggle.on { background: rgba(74, 222, 128, 0.3); }
+        .toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--text-muted); transition: all 0.2s;
+        }
+        .toggle.on::after { left: 22px; background: var(--green); }
+
+        /* Energy Settings */
+        .energy-config {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+
+        .energy-period {
+            padding: 16px; border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border); background: var(--glass);
+        }
+
+        .energy-period-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+        }
+
+        .energy-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+        }
+
+        .energy-period-name { font-size: 0.85rem; font-weight: 600; }
+        .energy-period p { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
+
+        .energy-bar-config {
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .energy-bar-track {
+            flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08);
+            overflow: hidden;
+        }
+
+        .energy-bar-fill { height: 100%; border-radius: 3px; }
+        .energy-bar-label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; min-width: 30px; }
+
+        /* Webhook/API */
+        .api-section { padding: 0 24px 24px; }
+
+        .api-key-display {
+            display: flex; align-items: center; gap: 0; margin-top: 8px;
+        }
+
+        .api-key-input {
+            flex: 1; padding: 10px 14px; border-radius: 8px 0 0 8px;
+            border: 1px solid var(--glass-border); border-right: none;
+            background: var(--glass); color: var(--text-primary); font-size: 0.82rem;
+            font-family: monospace; outline: none;
+        }
+
+        .api-key-btn {
+            padding: 10px 16px; border-radius: 0 8px 8px 0;
+            background: var(--gradient-primary); border: none; color: white;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+
+        /* Branding Preview */
+        .brand-preview {
+            padding: 20px; border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border); background: var(--glass);
+            margin-top: 20px;
+        }
+
+        .brand-preview-label {
+            font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+        }
+
+        .brand-preview-mini {
+            padding: 16px; border-radius: var(--radius-sm); background: var(--bg-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .brand-mini-header {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+        }
+
+        .brand-mini-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--gradient-primary); display: flex; align-items: center;
+            justify-content: center; font-size: 0.7rem; font-weight: 700;
+        }
+
+        .brand-mini-name { font-size: 0.85rem; font-weight: 600; }
+
+        .brand-mini-card {
+            padding: 10px; border-radius: 8px; border-left: 3px solid var(--accent-2);
+            background: rgba(168,85,247,0.06); font-size: 0.8rem;
+        }
+
+        .mockup-nav {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 200;
+            display: flex; gap: 8px; padding: 8px; background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .mockup-nav a { padding: 8px 18px; border-radius: 50px; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+        .mockup-nav a:hover { color: var(--text-primary); background: var(--glass); }
+        .mockup-nav a.active { background: var(--gradient-primary); color: white; }
+
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .profile-grid { grid-template-columns: 1fr; }
+            .energy-config { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">Llamame</div>
+        <ul class="sidebar-nav">
+            <li><a href="dashboard.html"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
+            <li><a href="event-editor.html"><span class="nav-icon">&#128197;</span> Event Types</a></li>
+            <li><a href="#"><span class="nav-icon">&#128198;</span> Calendar</a></li>
+            <li><a href="#"><span class="nav-icon">&#128101;</span> Clients</a></li>
+            <li><a href="#"><span class="nav-icon">&#128172;</span> Messages</a></li>
+            <li><div class="nav-divider"></div></li>
+            <li><a href="#"><span class="nav-icon">&#128176;</span> Payments</a></li>
+            <li><a href="#"><span class="nav-icon">&#128200;</span> Analytics</a></li>
+            <li><a href="#"><span class="nav-icon">&#9889;</span> Workflows</a></li>
+            <li><div class="nav-divider"></div></li>
+            <li><a href="#" class="active"><span class="nav-icon">&#9881;</span> Settings</a></li>
+        </ul>
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">M</div>
+            <div class="sidebar-user-info">
+                <strong>MantaRay Digital</strong>
+                <span>Pro Plan</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Settings</h1>
+            <p>Manage your account, integrations, branding, and AI preferences.</p>
+        </div>
+
+        <div class="settings-tabs">
+            <button class="settings-tab active">Profile</button>
+            <button class="settings-tab">Integrations</button>
+            <button class="settings-tab">Branding</button>
+            <button class="settings-tab">AI & Energy</button>
+            <button class="settings-tab">Notifications</button>
+            <button class="settings-tab">API</button>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="settings-section">
+            <div class="settings-section-header">
+                <h3>Profile Information</h3>
+                <p>This appears on your public booking pages.</p>
+            </div>
+            <div class="settings-body">
+                <div class="profile-grid">
+                    <div>
+                        <div class="avatar-upload">
+                            M
+                            <div class="avatar-upload-overlay">Change</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Display Name</label>
+                                <input type="text" class="form-input" value="MantaRay Digital">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Your URL</label>
+                                <input type="text" class="form-input" value="llamame.io/mantaray" style="font-family: monospace;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Welcome Message <span class="hint">(shown on your booking page)</span></label>
+                            <input type="text" class="form-input" value="Hey! Pick a time that works for you and let's make something great together.">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" value="hello@mantaray.digital">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Timezone</label>
+                                <select class="form-input">
+                                    <option selected>America/New_York (EST)</option>
+                                    <option>America/Chicago (CST)</option>
+                                    <option>America/Los_Angeles (PST)</option>
+                                    <option>Europe/London (GMT)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrations Section -->
+        <div class="settings-section">
+            <div class="settings-section-header">
+                <h3>Connected Integrations</h3>
+                <p>Connect your tools for seamless scheduling and automation.</p>
+            </div>
+            <div class="integrations-list">
+                <div class="integration-row">
+                    <div class="integ-icon" style="background: rgba(66,133,244,0.12)">&#128197;</div>
+                    <div class="integ-info">
+                        <div class="integ-name">Google Calendar</div>
+                        <div class="integ-desc">Two-way sync &middot; hello@mantaray.digital</div>
+                    </div>
+                    <span class="integ-status status-connected">Connected</span>
+                    <button class="btn btn-sm btn-secondary">Configure</button>
+                </div>
+
+                <div class="integration-row">
+                    <div class="integ-icon" style="background: rgba(37,99,235,0.12)">&#128225;</div>
+                    <div class="integ-info">
+                        <div class="integ-name">Google Meet</div>
+                        <div class="integ-desc">Auto-create meeting links</div>
+                    </div>
+                    <span class="integ-status status-connected">Connected</span>
+                    <button class="btn btn-sm btn-secondary">Configure</button>
+                </div>
+
+                <div class="integration-row">
+                    <div class="integ-icon" style="background: rgba(37,211,102,0.12)">&#128241;</div>
+                    <div class="integ-info">
+                        <div class="integ-name">WhatsApp Business</div>
+                        <div class="integ-desc">Booking bot &middot; +1 (555) 123-4567</div>
+                    </div>
+                    <span class="integ-status status-connected">Connected</span>
+                    <button class="btn btn-sm btn-secondary">Configure</button>
+                </div>
+
+                <div class="integration-row">
+                    <div class="integ-icon" style="background: rgba(99,91,255,0.12)">&#128179;</div>
+                    <div class="integ-info">
+                        <div class="integ-name">Stripe</div>
+                        <div class="integ-desc">Payment collection &middot; $2,450 collected this month</div>
+                    </div>
+                    <span class="integ-status status-connected">Connected</span>
+                    <button class="btn btn-sm btn-secondary">Configure</button>
+                </div>
+
+                <div class="integration-row">
+                    <div class="integ-icon" style="background: rgba(74,21,75,0.12)">&#128172;</div>
+                    <div class="integ-info">
+                        <div class="integ-name">Slack</div>
+                        <div class="integ-desc">Get booking notifications in #meetings channel</div>
+                    </div>
+                    <span class="integ-status status-disconnected">Not connected</span>
+                    <button class="btn btn-sm btn-connect">Connect</button>
+                </div>
+
+                <div class="integration-row">
+                    <div class="integ-icon" style="background: rgba(255,119,0,0.12)">&#128736;</div>
+                    <div class="integ-info">
+                        <div class="integ-name">HubSpot CRM</div>
+                        <div class="integ-desc">Sync clients and booking history to your CRM</div>
+                    </div>
+                    <span class="integ-status status-disconnected">Not connected</span>
+                    <button class="btn btn-sm btn-connect">Connect</button>
+                </div>
+
+                <div class="integration-row">
+                    <div class="integ-icon" style="background: rgba(0,176,244,0.12)">&#9889;</div>
+                    <div class="integ-info">
+                        <div class="integ-name">Zapier</div>
+                        <div class="integ-desc">Connect to 5000+ apps with custom automations</div>
+                    </div>
+                    <span class="integ-status status-disconnected">Not connected</span>
+                    <button class="btn btn-sm btn-connect">Connect</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI & Energy Settings -->
+        <div class="settings-section">
+            <div class="settings-section-header">
+                <h3>AI & Energy Settings</h3>
+                <p>Configure how Llamame's AI manages your schedule and energy.</p>
+            </div>
+            <div class="settings-body">
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">AI Meeting Briefs</div>
+                        <div class="toggle-desc">Auto-generate preparation briefs with client history before each meeting</div>
+                    </div>
+                    <div class="toggle on"></div>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Meeting Fatigue Protection</div>
+                        <div class="toggle-desc">Alert when you're at risk of overbooked days and suggest rescheduling</div>
+                    </div>
+                    <div class="toggle on"></div>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Smart Rescheduling</div>
+                        <div class="toggle-desc">Automatically suggest optimal alternative times when clients cancel</div>
+                    </div>
+                    <div class="toggle on"></div>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Client Memory</div>
+                        <div class="toggle-desc">Remember and surface past interactions, preferences, and notes for each client</div>
+                    </div>
+                    <div class="toggle on"></div>
+                </div>
+
+                <div style="margin-top: 24px;">
+                    <h4 style="font-size: 0.95rem; margin-bottom: 4px;">Energy Profile</h4>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">Tell us when you do your best work. AI will prioritize matching meeting types to your energy levels.</p>
+
+                    <div class="energy-config">
+                        <div class="energy-period">
+                            <div class="energy-period-header">
+                                <div class="energy-dot" style="background: var(--green)"></div>
+                                <span class="energy-period-name">Peak Hours</span>
+                            </div>
+                            <p>9:00 AM - 12:00 PM</p>
+                            <div class="energy-bar-config">
+                                <div class="energy-bar-track">
+                                    <div class="energy-bar-fill" style="width: 90%; background: var(--green)"></div>
+                                </div>
+                                <span class="energy-bar-label">90%</span>
+                            </div>
+                        </div>
+
+                        <div class="energy-period">
+                            <div class="energy-period-header">
+                                <div class="energy-dot" style="background: var(--accent-3)"></div>
+                                <span class="energy-period-name">Good Hours</span>
+                            </div>
+                            <p>1:00 PM - 3:00 PM</p>
+                            <div class="energy-bar-config">
+                                <div class="energy-bar-track">
+                                    <div class="energy-bar-fill" style="width: 70%; background: var(--accent-3)"></div>
+                                </div>
+                                <span class="energy-bar-label">70%</span>
+                            </div>
+                        </div>
+
+                        <div class="energy-period">
+                            <div class="energy-period-header">
+                                <div class="energy-dot" style="background: var(--yellow)"></div>
+                                <span class="energy-period-name">Low Energy</span>
+                            </div>
+                            <p>3:00 PM - 5:00 PM</p>
+                            <div class="energy-bar-config">
+                                <div class="energy-bar-track">
+                                    <div class="energy-bar-fill" style="width: 40%; background: var(--yellow)"></div>
+                                </div>
+                                <span class="energy-bar-label">40%</span>
+                            </div>
+                        </div>
+
+                        <div class="energy-period">
+                            <div class="energy-period-header">
+                                <div class="energy-dot" style="background: var(--accent-2)"></div>
+                                <span class="energy-period-name">Creative Time</span>
+                            </div>
+                            <p>7:00 PM - 9:00 PM</p>
+                            <div class="energy-bar-config">
+                                <div class="energy-bar-track">
+                                    <div class="energy-bar-fill" style="width: 65%; background: var(--accent-2)"></div>
+                                </div>
+                                <span class="energy-bar-label">65%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div class="settings-section">
+            <div class="settings-section-header">
+                <h3>Notification Preferences</h3>
+                <p>Choose how and when you want to be notified about bookings.</p>
+            </div>
+            <div class="settings-body">
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Email Notifications</div>
+                        <div class="toggle-desc">Receive email for new bookings, cancellations, and reminders</div>
+                    </div>
+                    <div class="toggle on"></div>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">WhatsApp Notifications</div>
+                        <div class="toggle-desc">Get real-time booking alerts via WhatsApp</div>
+                    </div>
+                    <div class="toggle on"></div>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">SMS Reminders to Clients</div>
+                        <div class="toggle-desc">Send automated SMS reminders 24h and 1h before meetings</div>
+                    </div>
+                    <div class="toggle on"></div>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Daily Digest</div>
+                        <div class="toggle-desc">Morning summary of today's meetings with AI briefs</div>
+                    </div>
+                    <div class="toggle on"></div>
+                </div>
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <div class="toggle-label">Weekly Analytics Report</div>
+                        <div class="toggle-desc">Get a weekly summary of bookings, revenue, and client insights</div>
+                    </div>
+                    <div class="toggle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Section -->
+        <div class="settings-section">
+            <div class="settings-section-header">
+                <h3>API & Webhooks</h3>
+                <p>Access your Llamame data programmatically or set up custom webhooks.</p>
+            </div>
+            <div class="api-section">
+                <div class="form-group" style="margin-top: 16px;">
+                    <label class="form-label">API Key</label>
+                    <div class="api-key-display">
+                        <input type="text" class="api-key-input" value="llm_sk_live_••••••••••••••••••••4f2a" readonly>
+                        <button class="api-key-btn">Copy</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Webhook URL</label>
+                    <input type="text" class="form-input" placeholder="https://your-app.com/webhooks/llamame">
+                </div>
+                <div style="margin-top: 8px;">
+                    <button class="btn btn-sm btn-secondary" style="margin-right: 8px;">View API Docs</button>
+                    <button class="btn btn-sm btn-secondary">Test Webhook</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; padding-bottom: 80px;">
+            <button class="btn btn-secondary">Cancel</button>
+            <button class="btn btn-primary" style="padding: 12px 32px;">Save All Changes</button>
+        </div>
+    </main>
+
+    <div class="mockup-nav">
+        <a href="index.html">Landing</a>
+        <a href="booking.html">Booking</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="event-editor.html">Event Editor</a>
+        <a href="confirmation.html">Confirmation</a>
+        <a href="settings.html" class="active">Settings</a>
+    </div>
+
+</body>
+</html>

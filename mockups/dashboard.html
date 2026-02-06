@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Llamame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent-1: #ff6b4a;
+            --accent-2: #a855f7;
+            --accent-3: #06b6d4;
+            --green: #4ade80;
+            --yellow: #fbbf24;
+            --red: #f87171;
+            --gradient-primary: linear-gradient(135deg, #ff6b4a, #a855f7);
+            --gradient-secondary: linear-gradient(135deg, #a855f7, #06b6d4);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-lg: 24px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            z-index: 50;
+        }
+
+        .sidebar-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding: 0 12px;
+            margin-bottom: 32px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .sidebar-nav li a:hover {
+            background: var(--glass);
+            color: var(--text-primary);
+        }
+
+        .sidebar-nav li a.active {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .sidebar-nav li a .nav-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-nav .nav-divider {
+            height: 1px;
+            background: var(--glass-border);
+            margin: 12px 0;
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+        }
+
+        .sidebar-user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-user-info strong {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-info span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 260px;
+            padding: 32px;
+            min-height: 100vh;
+        }
+
+        .main-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        .main-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 107, 74, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 107, 74, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--glass);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+        }
+
+        .btn-icon:hover {
+            border-color: rgba(255,255,255,0.15);
+            color: var(--text-primary);
+        }
+
+        /* AI Insight Banner */
+        .ai-banner {
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(6, 182, 212, 0.08));
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .ai-banner-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .ai-banner-text {
+            flex: 1;
+        }
+
+        .ai-banner-text strong {
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .ai-banner-text p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .ai-banner .btn {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 50px;
+        }
+
+        .stat-change.up {
+            background: rgba(74, 222, 128, 0.12);
+            color: var(--green);
+        }
+
+        .stat-change.down {
+            background: rgba(248, 113, 113, 0.12);
+            color: var(--red);
+        }
+
+        /* Energy Score */
+        .energy-card {
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.06), rgba(6, 182, 212, 0.04));
+        }
+
+        .energy-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .energy-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .energy-score {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .energy-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.08);
+            overflow: hidden;
+        }
+
+        .energy-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--gradient-secondary);
+            width: 78%;
+            transition: width 1s ease;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+
+        /* Upcoming Meetings */
+        .panel {
+            border-radius: var(--radius);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .panel-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .panel-header .view-all {
+            font-size: 0.8rem;
+            color: var(--accent-2);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .meeting-list {
+            padding: 8px;
+        }
+
+        .meeting-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 12px;
+            border-radius: var(--radius-sm);
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .meeting-item:hover { background: var(--glass); }
+
+        .meeting-time-block {
+            text-align: center;
+            min-width: 54px;
+        }
+
+        .meeting-time-block .time {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .meeting-time-block .duration {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .meeting-color {
+            width: 3px;
+            height: 40px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .meeting-info { flex: 1; }
+
+        .meeting-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .meeting-with {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .meeting-status {
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .status-confirmed {
+            background: rgba(74, 222, 128, 0.12);
+            color: var(--green);
+        }
+
+        .status-pending {
+            background: rgba(251, 191, 36, 0.12);
+            color: var(--yellow);
+        }
+
+        .meeting-day-divider {
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* AI Brief */
+        .ai-brief {
+            margin: 8px;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(6, 182, 212, 0.05));
+            border: 1px solid rgba(168, 85, 247, 0.15);
+        }
+
+        .ai-brief-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-2);
+        }
+
+        .ai-brief p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .ai-brief ul {
+            list-style: none;
+            margin-top: 8px;
+        }
+
+        .ai-brief ul li {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            padding: 3px 0;
+        }
+
+        .ai-brief ul li::before {
+            content: '>';
+            color: var(--accent-2);
+            margin-right: 8px;
+            font-weight: 700;
+        }
+
+        /* Event Types Panel */
+        .event-types-list {
+            padding: 12px;
+        }
+
+        .event-type-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .event-type-row:hover {
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        .et-color {
+            width: 4px;
+            height: 36px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .et-info { flex: 1; }
+
+        .et-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .et-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .et-toggle {
+            width: 40px;
+            height: 22px;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .et-toggle.on {
+            background: rgba(74, 222, 128, 0.3);
+        }
+
+        .et-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .et-toggle.on::after {
+            left: 21px;
+            background: var(--green);
+        }
+
+        .et-bookings {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* Client Intelligence Mini */
+        .client-intel {
+            padding: 16px;
+        }
+
+        .client-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .client-row:last-child { border-bottom: none; }
+
+        .client-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .client-name {
+            flex: 1;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .client-meetings {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .client-vibe {
+            font-size: 1rem;
+        }
+
+        /* Mockup Navigation */
+        .mockup-nav {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .mockup-nav a {
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .mockup-nav a:hover { color: var(--text-primary); background: var(--glass); }
+        .mockup-nav a.active { background: var(--gradient-primary); color: white; }
+
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .content-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">Llamame</div>
+        <ul class="sidebar-nav">
+            <li><a href="#" class="active"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
+            <li><a href="event-editor.html"><span class="nav-icon">&#128197;</span> Event Types</a></li>
+            <li><a href="#"><span class="nav-icon">&#128198;</span> Calendar</a></li>
+            <li><a href="#"><span class="nav-icon">&#128101;</span> Clients</a></li>
+            <li><a href="#"><span class="nav-icon">&#128172;</span> Messages</a></li>
+            <li><div class="nav-divider"></div></li>
+            <li><a href="#"><span class="nav-icon">&#128176;</span> Payments</a></li>
+            <li><a href="#"><span class="nav-icon">&#128200;</span> Analytics</a></li>
+            <li><a href="#"><span class="nav-icon">&#9889;</span> Workflows</a></li>
+            <li><div class="nav-divider"></div></li>
+            <li><a href="settings.html"><span class="nav-icon">&#9881;</span> Settings</a></li>
+        </ul>
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">M</div>
+            <div class="sidebar-user-info">
+                <strong>MantaRay Digital</strong>
+                <span>Pro Plan</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="main-header">
+            <div>
+                <h1>Good morning &#9728;&#65039;</h1>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">Thursday, February 6, 2026 &middot; 3 meetings today</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" title="Notifications">&#128276;</button>
+                <button class="btn-icon" title="Search">&#128269;</button>
+                <a href="event-editor.html" class="btn btn-primary">
+                    + New Event Type
+                </a>
+            </div>
+        </div>
+
+        <!-- AI Insight Banner -->
+        <div class="ai-banner">
+            <span class="ai-banner-icon">&#10024;</span>
+            <div class="ai-banner-text">
+                <strong>AI Insight</strong>
+                <p>Your no-show rate dropped 23% this month after adding the reminder workflow. Clients who complete the Vibe Check are 4x more likely to show up.</p>
+            </div>
+            <button class="btn btn-secondary">View Details</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Meetings This Week</div>
+                <div class="stat-value">18</div>
+                <span class="stat-change up">&#9650; 12% vs last week</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Revenue Collected</div>
+                <div class="stat-value">$2,450</div>
+                <span class="stat-change up">&#9650; 8% vs last week</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Show Rate</div>
+                <div class="stat-value">94%</div>
+                <span class="stat-change up">&#9650; 3% improvement</span>
+            </div>
+            <div class="energy-card">
+                <div class="energy-header">
+                    <span class="energy-label">Today's Energy Score</span>
+                    <div class="energy-score">
+                        &#128994; 78
+                    </div>
+                </div>
+                <div class="energy-bar">
+                    <div class="energy-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Left: Upcoming Meetings -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Upcoming Meetings</h3>
+                    <a href="#" class="view-all">View calendar &rarr;</a>
+                </div>
+
+                <div class="meeting-list">
+                    <div class="meeting-day-divider">Today &middot; Feb 6</div>
+
+                    <!-- AI Brief for next meeting -->
+                    <div class="ai-brief">
+                        <div class="ai-brief-header">
+                            &#10024; AI Brief for next meeting
+                        </div>
+                        <p><strong>Sarah from TechFlow</strong> — This is her 3rd Strategy Session. Last time you discussed SEO migration and she wanted a progress update. She completed the Vibe Check as "Excited".</p>
+                        <ul>
+                            <li>Follow up on SEO migration timeline</li>
+                            <li>Review Q1 content calendar she submitted</li>
+                            <li>She mentioned interest in paid ads</li>
+                        </ul>
+                    </div>
+
+                    <div class="meeting-item">
+                        <div class="meeting-time-block">
+                            <div class="time">10:00</div>
+                            <div class="duration">60 min</div>
+                        </div>
+                        <div class="meeting-color" style="background: var(--accent-2)"></div>
+                        <div class="meeting-info">
+                            <div class="meeting-title">Strategy Session</div>
+                            <div class="meeting-with">Sarah Chen &middot; TechFlow Inc</div>
+                        </div>
+                        <span class="meeting-status status-confirmed">Confirmed</span>
+                    </div>
+
+                    <div class="meeting-item">
+                        <div class="meeting-time-block">
+                            <div class="time">13:00</div>
+                            <div class="duration">30 min</div>
+                        </div>
+                        <div class="meeting-color" style="background: var(--accent-1)"></div>
+                        <div class="meeting-info">
+                            <div class="meeting-title">Discovery Call</div>
+                            <div class="meeting-with">James Rodriguez &middot; StartupXYZ</div>
+                        </div>
+                        <span class="meeting-status status-confirmed">Confirmed</span>
+                    </div>
+
+                    <div class="meeting-item">
+                        <div class="meeting-time-block">
+                            <div class="time">15:30</div>
+                            <div class="duration">15 min</div>
+                        </div>
+                        <div class="meeting-color" style="background: var(--accent-3)"></div>
+                        <div class="meeting-info">
+                            <div class="meeting-title">Quick Check-in</div>
+                            <div class="meeting-with">Ana Kovacs &middot; GrowthLab</div>
+                        </div>
+                        <span class="meeting-status status-pending">Pending</span>
+                    </div>
+
+                    <div class="meeting-day-divider">Tomorrow &middot; Feb 7</div>
+
+                    <div class="meeting-item">
+                        <div class="meeting-time-block">
+                            <div class="time">09:00</div>
+                            <div class="duration">60 min</div>
+                        </div>
+                        <div class="meeting-color" style="background: var(--accent-2)"></div>
+                        <div class="meeting-info">
+                            <div class="meeting-title">Strategy Session</div>
+                            <div class="meeting-with">Lucas Sharma &middot; DesignCo</div>
+                        </div>
+                        <span class="meeting-status status-confirmed">Confirmed</span>
+                    </div>
+
+                    <div class="meeting-item">
+                        <div class="meeting-time-block">
+                            <div class="time">11:00</div>
+                            <div class="duration">30 min</div>
+                        </div>
+                        <div class="meeting-color" style="background: var(--accent-1)"></div>
+                        <div class="meeting-info">
+                            <div class="meeting-title">Discovery Call</div>
+                            <div class="meeting-with">Emily Watson &middot; BrandForge</div>
+                        </div>
+                        <span class="meeting-status status-pending">Pending</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Event Types -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Event Types</h3>
+                        <a href="event-editor.html" class="view-all">Manage &rarr;</a>
+                    </div>
+                    <div class="event-types-list">
+                        <div class="event-type-row">
+                            <div class="et-color" style="background: var(--accent-1)"></div>
+                            <div class="et-info">
+                                <div class="et-name">Discovery Call</div>
+                                <div class="et-meta">30 min &middot; Google Meet</div>
+                            </div>
+                            <div class="et-bookings">42 booked</div>
+                            <div class="et-toggle on"></div>
+                        </div>
+                        <div class="event-type-row">
+                            <div class="et-color" style="background: var(--accent-2)"></div>
+                            <div class="et-info">
+                                <div class="et-name">Strategy Session</div>
+                                <div class="et-meta">60 min &middot; $150 &middot; Google Meet</div>
+                            </div>
+                            <div class="et-bookings">28 booked</div>
+                            <div class="et-toggle on"></div>
+                        </div>
+                        <div class="event-type-row">
+                            <div class="et-color" style="background: var(--accent-3)"></div>
+                            <div class="et-info">
+                                <div class="et-name">Quick Check-in</div>
+                                <div class="et-meta">15 min &middot; Phone</div>
+                            </div>
+                            <div class="et-bookings">67 booked</div>
+                            <div class="et-toggle on"></div>
+                        </div>
+                        <div class="event-type-row">
+                            <div class="et-color" style="background: var(--yellow)"></div>
+                            <div class="et-info">
+                                <div class="et-name">Workshop</div>
+                                <div class="et-meta">120 min &middot; $500 &middot; Zoom</div>
+                            </div>
+                            <div class="et-bookings">5 booked</div>
+                            <div class="et-toggle"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Clients -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Recent Clients</h3>
+                        <a href="#" class="view-all">All clients &rarr;</a>
+                    </div>
+                    <div class="client-intel">
+                        <div class="client-row">
+                            <div class="client-avatar" style="background: var(--gradient-primary)">SC</div>
+                            <div class="client-name">Sarah Chen</div>
+                            <div class="client-meetings">12 meetings</div>
+                            <div class="client-vibe">&#128640;</div>
+                        </div>
+                        <div class="client-row">
+                            <div class="client-avatar" style="background: var(--gradient-secondary)">JR</div>
+                            <div class="client-name">James Rodriguez</div>
+                            <div class="client-meetings">1 meeting</div>
+                            <div class="client-vibe">&#129300;</div>
+                        </div>
+                        <div class="client-row">
+                            <div class="client-avatar" style="background: linear-gradient(135deg, #fbbf24, #f97316)">AK</div>
+                            <div class="client-name">Ana Kovacs</div>
+                            <div class="client-meetings">8 meetings</div>
+                            <div class="client-vibe">&#128522;</div>
+                        </div>
+                        <div class="client-row">
+                            <div class="client-avatar" style="background: linear-gradient(135deg, #06b6d4, #3b82f6)">LS</div>
+                            <div class="client-name">Lucas Sharma</div>
+                            <div class="client-meetings">5 meetings</div>
+                            <div class="client-vibe">&#128522;</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mockup Navigation -->
+    <div class="mockup-nav">
+        <a href="index.html">Landing</a>
+        <a href="booking.html">Booking</a>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="event-editor.html">Event Editor</a>
+        <a href="confirmation.html">Confirmation</a>
+        <a href="settings.html">Settings</a>
+    </div>
+
+</body>
+</html>

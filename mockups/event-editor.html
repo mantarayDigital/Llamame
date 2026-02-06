@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Type Editor - Llamame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent-1: #ff6b4a;
+            --accent-2: #a855f7;
+            --accent-3: #06b6d4;
+            --green: #4ade80;
+            --yellow: #fbbf24;
+            --gradient-primary: linear-gradient(135deg, #ff6b4a, #a855f7);
+            --gradient-secondary: linear-gradient(135deg, #a855f7, #06b6d4);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-lg: 24px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; }
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+
+        .sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0; width: 260px;
+            background: var(--bg-secondary); border-right: 1px solid var(--glass-border);
+            display: flex; flex-direction: column; padding: 24px 16px; z-index: 50;
+        }
+        .sidebar-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; padding: 0 12px; margin-bottom: 32px; }
+        .sidebar-nav { list-style: none; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .sidebar-nav li a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        .sidebar-nav li a:hover { background: var(--glass); color: var(--text-primary); }
+        .sidebar-nav li a.active { background: rgba(168, 85, 247, 0.1); color: var(--text-primary); border: 1px solid rgba(168, 85, 247, 0.2); }
+        .sidebar-nav li a .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+        .sidebar-nav .nav-divider { height: 1px; background: var(--glass-border); margin: 12px 0; }
+        .sidebar-user { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass); }
+        .sidebar-user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+        .sidebar-user-info { flex: 1; min-width: 0; }
+        .sidebar-user-info strong { display: block; font-size: 0.85rem; font-weight: 600; }
+        .sidebar-user-info span { font-size: 0.75rem; color: var(--text-muted); }
+
+        .main { margin-left: 260px; padding: 32px; min-height: 100vh; }
+
+        .top-bar {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;
+        }
+        .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); }
+        .breadcrumb a { color: var(--text-secondary); text-decoration: none; }
+        .breadcrumb a:hover { color: var(--text-primary); }
+        .top-actions { display: flex; gap: 10px; }
+
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 50px; font-weight: 600; font-size: 0.85rem; text-decoration: none; border: none; cursor: pointer; transition: all 0.3s ease; font-family: 'Inter', sans-serif; }
+        .btn-primary { background: var(--gradient-primary); color: white; box-shadow: 0 4px 20px rgba(255, 107, 74, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-secondary { background: var(--glass); color: var(--text-primary); border: 1px solid var(--glass-border); }
+        .btn-danger { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
+
+        .editor-layout { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
+
+        /* Form Panel */
+        .form-panel {
+            border-radius: var(--radius); border: 1px solid var(--glass-border); background: var(--bg-card);
+        }
+        .form-section {
+            padding: 28px; border-bottom: 1px solid var(--glass-border);
+        }
+        .form-section:last-child { border-bottom: none; }
+        .form-section-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+        .form-section-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 20px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; }
+        .form-label .optional { color: var(--text-muted); font-weight: 400; }
+        .form-input {
+            width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border); background: var(--glass);
+            color: var(--text-primary); font-size: 0.9rem; font-family: inherit; outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--accent-2); }
+        .form-input::placeholder { color: var(--text-muted); }
+        textarea.form-input { min-height: 80px; resize: vertical; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        /* Color picker */
+        .color-picker { display: flex; gap: 8px; }
+        .color-option {
+            width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+            border: 2px solid transparent; transition: all 0.2s;
+        }
+        .color-option:hover { transform: scale(1.1); }
+        .color-option.selected { border-color: white; box-shadow: 0 0 0 2px rgba(255,255,255,0.3); }
+
+        /* Duration selector */
+        .duration-options { display: flex; gap: 8px; flex-wrap: wrap; }
+        .duration-chip {
+            padding: 8px 18px; border-radius: 50px; font-size: 0.85rem; font-weight: 500;
+            border: 1px solid var(--glass-border); background: var(--glass);
+            cursor: pointer; transition: all 0.2s; color: var(--text-secondary);
+        }
+        .duration-chip:hover { border-color: rgba(255,255,255,0.15); color: var(--text-primary); }
+        .duration-chip.selected { background: var(--gradient-primary); border-color: transparent; color: white; }
+
+        /* Location options */
+        .location-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .location-option {
+            padding: 14px; border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border); background: var(--glass);
+            text-align: center; cursor: pointer; transition: all 0.2s;
+        }
+        .location-option:hover { border-color: rgba(255,255,255,0.15); }
+        .location-option.selected { border-color: var(--accent-2); background: rgba(168,85,247,0.08); }
+        .location-icon { font-size: 1.5rem; display: block; margin-bottom: 6px; }
+        .location-name { font-size: 0.8rem; font-weight: 500; }
+
+        /* Availability Grid */
+        .avail-grid { display: flex; flex-direction: column; gap: 8px; }
+        .avail-row { display: flex; align-items: center; gap: 12px; }
+        .avail-day {
+            width: 80px; font-size: 0.85rem; font-weight: 500;
+        }
+        .avail-day.disabled { color: var(--text-muted); }
+        .avail-toggle {
+            width: 36px; height: 20px; border-radius: 10px;
+            background: rgba(255,255,255,0.1); position: relative; cursor: pointer; flex-shrink: 0;
+        }
+        .avail-toggle.on { background: rgba(74, 222, 128, 0.3); }
+        .avail-toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--text-muted); transition: all 0.2s;
+        }
+        .avail-toggle.on::after { left: 18px; background: var(--green); }
+        .avail-times {
+            flex: 1; display: flex; align-items: center; gap: 6px;
+        }
+        .avail-time-input {
+            padding: 6px 10px; border-radius: 6px; border: 1px solid var(--glass-border);
+            background: var(--glass); color: var(--text-primary); font-size: 0.8rem;
+            font-family: inherit; outline: none; width: 90px; text-align: center;
+        }
+        .avail-time-input:focus { border-color: var(--accent-2); }
+        .avail-separator { color: var(--text-muted); font-size: 0.8rem; }
+
+        /* Toggle */
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid var(--glass-border);
+        }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-info { flex: 1; }
+        .toggle-label { font-size: 0.9rem; font-weight: 500; }
+        .toggle-desc { font-size: 0.78rem; color: var(--text-muted); }
+        .toggle {
+            width: 44px; height: 24px; border-radius: 12px;
+            background: rgba(255,255,255,0.1); position: relative; cursor: pointer; flex-shrink: 0;
+        }
+        .toggle.on { background: rgba(74, 222, 128, 0.3); }
+        .toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--text-muted); transition: all 0.2s;
+        }
+        .toggle.on::after { left: 22px; background: var(--green); }
+
+        /* Preview */
+        .preview-panel {
+            position: sticky; top: 32px;
+        }
+        .preview-card {
+            border-radius: var(--radius-lg); border: 1px solid var(--glass-border);
+            background: var(--bg-card); overflow: hidden; backdrop-filter: blur(20px);
+        }
+        .preview-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .preview-header h4 { font-size: 0.85rem; font-weight: 600; }
+        .preview-label {
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-muted);
+        }
+        .preview-body { padding: 24px; }
+        .prev-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--gradient-primary); display: flex; align-items: center;
+            justify-content: center; font-size: 1.3rem; font-weight: 700; margin-bottom: 14px;
+        }
+        .prev-name { font-weight: 600; margin-bottom: 2px; }
+        .prev-handle { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 20px; }
+        .prev-event-card {
+            padding: 16px; border-radius: var(--radius-sm);
+            border-left: 4px solid var(--accent-2); background: rgba(168,85,247,0.06);
+            margin-bottom: 16px;
+        }
+        .prev-event-name { font-weight: 600; font-size: 1rem; margin-bottom: 8px; }
+        .prev-event-detail { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .prev-event-desc { font-size: 0.82rem; color: var(--text-muted); margin-top: 12px; line-height: 1.5; }
+        .prev-link {
+            display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+            border-radius: var(--radius-sm); background: var(--glass);
+            border: 1px solid var(--glass-border); font-size: 0.82rem;
+            color: var(--text-secondary); margin-top: 16px;
+        }
+        .prev-link code {
+            color: var(--accent-3); font-size: 0.8rem;
+        }
+
+        /* Copy link */
+        .copy-section {
+            padding: 20px; border-top: 1px solid var(--glass-border);
+        }
+        .copy-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+        .copy-input {
+            display: flex; gap: 0;
+        }
+        .copy-input input {
+            flex: 1; padding: 10px 14px; border-radius: 8px 0 0 8px;
+            border: 1px solid var(--glass-border); border-right: none;
+            background: var(--glass); color: var(--text-primary); font-size: 0.82rem;
+            font-family: monospace; outline: none;
+        }
+        .copy-btn {
+            padding: 10px 16px; border-radius: 0 8px 8px 0;
+            background: var(--gradient-primary); border: none; color: white;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+
+        .mockup-nav {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 200;
+            display: flex; gap: 8px; padding: 8px; background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .mockup-nav a { padding: 8px 18px; border-radius: 50px; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+        .mockup-nav a:hover { color: var(--text-primary); background: var(--glass); }
+        .mockup-nav a.active { background: var(--gradient-primary); color: white; }
+
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .editor-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">Llamame</div>
+        <ul class="sidebar-nav">
+            <li><a href="dashboard.html"><span class="nav-icon">&#127968;</span> Dashboard</a></li>
+            <li><a href="#" class="active"><span class="nav-icon">&#128197;</span> Event Types</a></li>
+            <li><a href="#"><span class="nav-icon">&#128198;</span> Calendar</a></li>
+            <li><a href="#"><span class="nav-icon">&#128101;</span> Clients</a></li>
+            <li><a href="#"><span class="nav-icon">&#128172;</span> Messages</a></li>
+            <li><div class="nav-divider"></div></li>
+            <li><a href="#"><span class="nav-icon">&#128176;</span> Payments</a></li>
+            <li><a href="#"><span class="nav-icon">&#128200;</span> Analytics</a></li>
+            <li><a href="#"><span class="nav-icon">&#9889;</span> Workflows</a></li>
+            <li><div class="nav-divider"></div></li>
+            <li><a href="settings.html"><span class="nav-icon">&#9881;</span> Settings</a></li>
+        </ul>
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">M</div>
+            <div class="sidebar-user-info">
+                <strong>MantaRay Digital</strong>
+                <span>Pro Plan</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="top-bar">
+            <div class="breadcrumb">
+                <a href="dashboard.html">Dashboard</a>
+                <span>/</span>
+                <a href="#">Event Types</a>
+                <span>/</span>
+                <span style="color: var(--text-primary)">Strategy Session</span>
+            </div>
+            <div class="top-actions">
+                <button class="btn btn-danger">Delete</button>
+                <button class="btn btn-secondary">Duplicate</button>
+                <button class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+
+        <div class="editor-layout">
+            <!-- Form -->
+            <div class="form-panel">
+                <!-- Basic Info -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Basic Information</h3>
+                    <p class="form-section-desc">Define the event name, color, and description.</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Event Name</label>
+                        <input type="text" class="form-input" value="Strategy Session">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Color</label>
+                        <div class="color-picker">
+                            <div class="color-option" style="background: #ff6b4a"></div>
+                            <div class="color-option selected" style="background: #a855f7"></div>
+                            <div class="color-option" style="background: #06b6d4"></div>
+                            <div class="color-option" style="background: #4ade80"></div>
+                            <div class="color-option" style="background: #fbbf24"></div>
+                            <div class="color-option" style="background: #f87171"></div>
+                            <div class="color-option" style="background: #ec4899"></div>
+                            <div class="color-option" style="background: #6366f1"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Slug</label>
+                        <input type="text" class="form-input" value="strategy-session" style="font-family: monospace;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description <span class="optional">(shown to clients)</span></label>
+                        <textarea class="form-input">A deep-dive strategy session to discuss your digital marketing goals, current challenges, and create an actionable roadmap. Come prepared with your top 3 priorities.</textarea>
+                    </div>
+                </div>
+
+                <!-- Duration & Location -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Duration & Location</h3>
+                    <p class="form-section-desc">How long and where does this meeting happen?</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Duration</label>
+                        <div class="duration-options">
+                            <div class="duration-chip">15 min</div>
+                            <div class="duration-chip">30 min</div>
+                            <div class="duration-chip">45 min</div>
+                            <div class="duration-chip selected">60 min</div>
+                            <div class="duration-chip">90 min</div>
+                            <div class="duration-chip">Custom</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <div class="location-options">
+                            <div class="location-option">
+                                <span class="location-icon">&#128249;</span>
+                                <span class="location-name">Zoom</span>
+                            </div>
+                            <div class="location-option selected">
+                                <span class="location-icon">&#128225;</span>
+                                <span class="location-name">Google Meet</span>
+                            </div>
+                            <div class="location-option">
+                                <span class="location-icon">&#128222;</span>
+                                <span class="location-name">Phone Call</span>
+                            </div>
+                            <div class="location-option">
+                                <span class="location-icon">&#127758;</span>
+                                <span class="location-name">MS Teams</span>
+                            </div>
+                            <div class="location-option">
+                                <span class="location-icon">&#128205;</span>
+                                <span class="location-name">In Person</span>
+                            </div>
+                            <div class="location-option">
+                                <span class="location-icon">&#128279;</span>
+                                <span class="location-name">Custom URL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Buffer Before</label>
+                            <select class="form-input">
+                                <option>No buffer</option>
+                                <option>5 minutes</option>
+                                <option>10 minutes</option>
+                                <option selected>15 minutes</option>
+                                <option>30 minutes</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Buffer After</label>
+                            <select class="form-input">
+                                <option>No buffer</option>
+                                <option>5 minutes</option>
+                                <option selected>10 minutes</option>
+                                <option>15 minutes</option>
+                                <option>30 minutes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Availability -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Availability</h3>
+                    <p class="form-section-desc">Set when clients can book this event type.</p>
+
+                    <div class="avail-grid">
+                        <div class="avail-row">
+                            <span class="avail-day">Monday</span>
+                            <div class="avail-toggle on"></div>
+                            <div class="avail-times">
+                                <input type="text" class="avail-time-input" value="9:00 AM">
+                                <span class="avail-separator">to</span>
+                                <input type="text" class="avail-time-input" value="5:00 PM">
+                            </div>
+                        </div>
+                        <div class="avail-row">
+                            <span class="avail-day">Tuesday</span>
+                            <div class="avail-toggle on"></div>
+                            <div class="avail-times">
+                                <input type="text" class="avail-time-input" value="9:00 AM">
+                                <span class="avail-separator">to</span>
+                                <input type="text" class="avail-time-input" value="5:00 PM">
+                            </div>
+                        </div>
+                        <div class="avail-row">
+                            <span class="avail-day">Wednesday</span>
+                            <div class="avail-toggle on"></div>
+                            <div class="avail-times">
+                                <input type="text" class="avail-time-input" value="9:00 AM">
+                                <span class="avail-separator">to</span>
+                                <input type="text" class="avail-time-input" value="5:00 PM">
+                            </div>
+                        </div>
+                        <div class="avail-row">
+                            <span class="avail-day">Thursday</span>
+                            <div class="avail-toggle on"></div>
+                            <div class="avail-times">
+                                <input type="text" class="avail-time-input" value="9:00 AM">
+                                <span class="avail-separator">to</span>
+                                <input type="text" class="avail-time-input" value="5:00 PM">
+                            </div>
+                        </div>
+                        <div class="avail-row">
+                            <span class="avail-day">Friday</span>
+                            <div class="avail-toggle on"></div>
+                            <div class="avail-times">
+                                <input type="text" class="avail-time-input" value="9:00 AM">
+                                <span class="avail-separator">to</span>
+                                <input type="text" class="avail-time-input" value="3:00 PM">
+                            </div>
+                        </div>
+                        <div class="avail-row">
+                            <span class="avail-day disabled">Saturday</span>
+                            <div class="avail-toggle"></div>
+                            <div class="avail-times" style="opacity: 0.3">
+                                <input type="text" class="avail-time-input" value="--" disabled>
+                                <span class="avail-separator">to</span>
+                                <input type="text" class="avail-time-input" value="--" disabled>
+                            </div>
+                        </div>
+                        <div class="avail-row">
+                            <span class="avail-day disabled">Sunday</span>
+                            <div class="avail-toggle"></div>
+                            <div class="avail-times" style="opacity: 0.3">
+                                <input type="text" class="avail-time-input" value="--" disabled>
+                                <span class="avail-separator">to</span>
+                                <input type="text" class="avail-time-input" value="--" disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Payment</h3>
+                    <p class="form-section-desc">Collect payment at booking time.</p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Payment Type</label>
+                            <select class="form-input">
+                                <option>No payment</option>
+                                <option selected>Fixed price</option>
+                                <option>Deposit</option>
+                                <option>Pay what you want</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Amount</label>
+                            <input type="text" class="form-input" value="$150.00">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="form-section">
+                    <h3 class="form-section-title">Advanced Options</h3>
+                    <p class="form-section-desc">Fine-tune the booking experience.</p>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label">Enable Vibe Check</div>
+                            <div class="toggle-desc">Show a pre-meeting questionnaire to collect client mood and goals</div>
+                        </div>
+                        <div class="toggle on"></div>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label">AI Meeting Briefs</div>
+                            <div class="toggle-desc">Generate a pre-meeting brief with client history and suggested topics</div>
+                        </div>
+                        <div class="toggle on"></div>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label">WhatsApp Booking</div>
+                            <div class="toggle-desc">Allow clients to book this event type via WhatsApp chat</div>
+                        </div>
+                        <div class="toggle on"></div>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label">Energy-Aware Scheduling</div>
+                            <div class="toggle-desc">Only offer time slots during your peak energy hours</div>
+                        </div>
+                        <div class="toggle on"></div>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label">Require Confirmation</div>
+                            <div class="toggle-desc">Manually approve bookings before they're confirmed</div>
+                        </div>
+                        <div class="toggle"></div>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <div class="toggle-label">Daily Booking Limit</div>
+                            <div class="toggle-desc">Maximum 3 strategy sessions per day</div>
+                        </div>
+                        <div class="toggle on"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="preview-panel">
+                <div class="preview-card">
+                    <div class="preview-header">
+                        <h4>Live Preview</h4>
+                        <span class="preview-label">Client View</span>
+                    </div>
+                    <div class="preview-body">
+                        <div class="prev-avatar">M</div>
+                        <div class="prev-name">MantaRay Digital</div>
+                        <div class="prev-handle">llamame.io/mantaray</div>
+
+                        <div class="prev-event-card">
+                            <div class="prev-event-name">Strategy Session</div>
+                            <div class="prev-event-detail">&#9201; 60 minutes</div>
+                            <div class="prev-event-detail">&#128225; Google Meet</div>
+                            <div class="prev-event-detail">&#128176; $150.00</div>
+                            <div class="prev-event-detail">&#10024; Includes Vibe Check</div>
+                            <p class="prev-event-desc">A deep-dive strategy session to discuss your digital marketing goals, current challenges, and create an actionable roadmap.</p>
+                        </div>
+
+                        <div class="prev-link">
+                            &#128279; <code>llamame.io/mantaray/strategy-session</code>
+                        </div>
+                    </div>
+
+                    <div class="copy-section">
+                        <div class="copy-label">Share booking link</div>
+                        <div class="copy-input">
+                            <input type="text" value="https://llamame.io/mantaray/strategy-session" readonly>
+                            <button class="copy-btn">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="mockup-nav">
+        <a href="index.html">Landing</a>
+        <a href="booking.html">Booking</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="event-editor.html" class="active">Event Editor</a>
+        <a href="confirmation.html">Confirmation</a>
+        <a href="settings.html">Settings</a>
+    </div>
+
+</body>
+</html>

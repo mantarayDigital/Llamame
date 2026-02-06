@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Meeting - Llamame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.06);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent-1: #ff6b4a;
+            --accent-2: #a855f7;
+            --accent-3: #06b6d4;
+            --gradient-primary: linear-gradient(135deg, #ff6b4a, #a855f7);
+            --gradient-secondary: linear-gradient(135deg, #a855f7, #06b6d4);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-lg: 24px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.3);
+            --shadow-glow: 0 0 60px rgba(168, 85, 247, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-orb-1 { width: 500px; height: 500px; background: var(--accent-1); top: -200px; right: -100px; animation: float 20s ease-in-out infinite; }
+        .bg-orb-2 { width: 400px; height: 400px; background: var(--accent-2); bottom: -100px; left: -100px; animation: float 25s ease-in-out infinite reverse; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -40px) scale(1.05); }
+            50% { transform: translate(-20px, 30px) scale(0.95); }
+            75% { transform: translate(40px, 20px) scale(1.02); }
+        }
+
+        .booking-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1100px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            box-shadow: var(--shadow), var(--shadow-glow);
+        }
+
+        /* Steps indicator */
+        .booking-steps {
+            display: flex;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--glass-border);
+            gap: 0;
+        }
+
+        .step {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .step::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--glass-border);
+            margin: 0 16px;
+        }
+
+        .step:last-child::after { display: none; }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step.active { color: var(--text-primary); }
+        .step.active .step-number {
+            background: var(--gradient-primary);
+            border-color: transparent;
+            color: white;
+        }
+
+        .step.done { color: var(--text-secondary); }
+        .step.done .step-number {
+            background: rgba(74, 222, 128, 0.15);
+            border-color: rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+        }
+
+        .booking-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+        }
+
+        /* Left Panel - Host Info */
+        .host-panel {
+            padding: 32px;
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .host-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .host-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .host-handle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+        }
+
+        .meeting-type-selected {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--accent-2);
+            background: rgba(168, 85, 247, 0.08);
+            margin-bottom: 24px;
+        }
+
+        .meeting-type-selected .mt-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .mt-color {
+            width: 4px;
+            height: 28px;
+            border-radius: 4px;
+            background: var(--accent-2);
+        }
+
+        .mt-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .mt-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-left: 14px;
+        }
+
+        .mt-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .mt-detail-icon {
+            font-size: 1rem;
+            opacity: 0.7;
+        }
+
+        .host-description {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .timezone-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: auto;
+        }
+
+        .timezone-display select {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .timezone-display select option { background: var(--bg-secondary); }
+
+        /* Right Panel - Calendar & Times */
+        .calendar-panel {
+            padding: 32px;
+        }
+
+        .calendar-month-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .calendar-month-nav h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .month-nav-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .month-nav-btns button {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .month-nav-btns button:hover {
+            border-color: rgba(255,255,255,0.15);
+            color: var(--text-primary);
+        }
+
+        .calendar-body {
+            display: grid;
+            grid-template-columns: 1fr 200px;
+            gap: 24px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+
+        .day-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .day-cell.empty { cursor: default; }
+
+        .day-cell.disabled {
+            color: var(--text-muted);
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .day-cell.available {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .day-cell.available:hover {
+            background: var(--glass);
+        }
+
+        .day-cell.available::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent-3);
+        }
+
+        .day-cell.selected {
+            background: var(--gradient-primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .day-cell.selected::after { display: none; }
+
+        .day-cell.today {
+            border: 1px solid var(--accent-2);
+        }
+
+        /* Time slots panel */
+        .time-panel {
+            border-left: 1px solid var(--glass-border);
+            padding-left: 24px;
+        }
+
+        .time-panel h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .time-panel .date-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .time-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 340px;
+            overflow-y: auto;
+        }
+
+        .time-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .time-list::-webkit-scrollbar-track { background: transparent; }
+        .time-list::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 4px;
+        }
+
+        .time-option {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .time-option:hover {
+            border-color: var(--accent-1);
+            background: rgba(255, 107, 74, 0.08);
+        }
+
+        .time-option.selected {
+            background: var(--gradient-primary);
+            border-color: transparent;
+            color: white;
+        }
+
+        .time-option .confirm-btn {
+            display: none;
+            padding: 4px 12px;
+            border-radius: 50px;
+            background: white;
+            color: var(--accent-1);
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .time-option.selected .confirm-btn { display: block; }
+
+        /* Vibe Check Form (step 2 preview) */
+        .vibe-check {
+            display: none;
+            padding: 32px;
+        }
+
+        .vibe-check.visible { display: block; }
+
+        .vibe-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .vibe-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .vibe-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+        }
+
+        .vibe-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 600px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group .optional {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.8rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-2);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Mood selector */
+        .mood-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mood-option {
+            flex: 1;
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mood-option:hover {
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .mood-option.selected {
+            border-color: var(--accent-2);
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .mood-emoji {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .mood-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 107, 74, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 107, 74, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--glass);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+        }
+
+        /* Powered by */
+        .powered-by {
+            text-align: center;
+            padding: 16px;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .powered-by a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Mockup Navigation */
+        .mockup-nav {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+
+        .mockup-nav a {
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .mockup-nav a:hover { color: var(--text-primary); background: var(--glass); }
+        .mockup-nav a.active { background: var(--gradient-primary); color: white; }
+
+        @media (max-width: 768px) {
+            body { padding: 16px; }
+            .booking-layout { grid-template-columns: 1fr; }
+            .host-panel { border-right: none; border-bottom: 1px solid var(--glass-border); }
+            .calendar-body { grid-template-columns: 1fr; }
+            .time-panel { border-left: none; border-top: 1px solid var(--glass-border); padding-left: 0; padding-top: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+
+    <div class="booking-container">
+        <!-- Step Indicator -->
+        <div class="booking-steps">
+            <div class="step done">
+                <span class="step-number">&#10003;</span>
+                Event Type
+            </div>
+            <div class="step active">
+                <span class="step-number">2</span>
+                Date & Time
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                Vibe Check
+            </div>
+            <div class="step">
+                <span class="step-number">4</span>
+                Confirm
+            </div>
+        </div>
+
+        <div class="booking-layout">
+            <!-- Host Info Panel -->
+            <div class="host-panel">
+                <div class="host-avatar">M</div>
+                <div class="host-name">MantaRay Digital</div>
+                <div class="host-handle">llamame.io/mantaray</div>
+
+                <div class="meeting-type-selected">
+                    <div class="mt-header">
+                        <div class="mt-color"></div>
+                        <div class="mt-name">Strategy Session</div>
+                    </div>
+                    <div class="mt-details">
+                        <div class="mt-detail">
+                            <span class="mt-detail-icon">&#9201;</span>
+                            60 minutes
+                        </div>
+                        <div class="mt-detail">
+                            <span class="mt-detail-icon">&#128249;</span>
+                            Google Meet
+                        </div>
+                        <div class="mt-detail">
+                            <span class="mt-detail-icon">&#128176;</span>
+                            $150 consultation fee
+                        </div>
+                    </div>
+                </div>
+
+                <div class="host-description">
+                    A deep-dive strategy session to discuss your digital marketing goals, current challenges, and create an actionable roadmap. Come prepared with your top 3 priorities.
+                </div>
+
+                <div class="timezone-display">
+                    &#127758;
+                    <select>
+                        <option>America/New_York (EST)</option>
+                        <option>America/Chicago (CST)</option>
+                        <option>America/Denver (MST)</option>
+                        <option>America/Los_Angeles (PST)</option>
+                        <option>Europe/London (GMT)</option>
+                        <option>Europe/Madrid (CET)</option>
+                        <option>America/Bogota (COT)</option>
+                        <option>America/Buenos_Aires (ART)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Calendar Panel -->
+            <div class="calendar-panel">
+                <div class="calendar-month-nav">
+                    <h2>February 2026</h2>
+                    <div class="month-nav-btns">
+                        <button>&larr;</button>
+                        <button>&rarr;</button>
+                    </div>
+                </div>
+
+                <div class="calendar-body">
+                    <div class="calendar-grid">
+                        <div class="day-label">Mon</div>
+                        <div class="day-label">Tue</div>
+                        <div class="day-label">Wed</div>
+                        <div class="day-label">Thu</div>
+                        <div class="day-label">Fri</div>
+                        <div class="day-label">Sat</div>
+                        <div class="day-label">Sun</div>
+
+                        <div class="day-cell empty"></div>
+                        <div class="day-cell empty"></div>
+                        <div class="day-cell empty"></div>
+                        <div class="day-cell empty"></div>
+                        <div class="day-cell empty"></div>
+                        <div class="day-cell empty"></div>
+                        <div class="day-cell disabled">1</div>
+
+                        <div class="day-cell disabled">2</div>
+                        <div class="day-cell disabled">3</div>
+                        <div class="day-cell disabled">4</div>
+                        <div class="day-cell disabled">5</div>
+                        <div class="day-cell today available">6</div>
+                        <div class="day-cell">7</div>
+                        <div class="day-cell">8</div>
+
+                        <div class="day-cell available">9</div>
+                        <div class="day-cell selected">10</div>
+                        <div class="day-cell available">11</div>
+                        <div class="day-cell available">12</div>
+                        <div class="day-cell available">13</div>
+                        <div class="day-cell">14</div>
+                        <div class="day-cell">15</div>
+
+                        <div class="day-cell available">16</div>
+                        <div class="day-cell available">17</div>
+                        <div class="day-cell available">18</div>
+                        <div class="day-cell available">19</div>
+                        <div class="day-cell available">20</div>
+                        <div class="day-cell">21</div>
+                        <div class="day-cell">22</div>
+
+                        <div class="day-cell available">23</div>
+                        <div class="day-cell available">24</div>
+                        <div class="day-cell available">25</div>
+                        <div class="day-cell available">26</div>
+                        <div class="day-cell available">27</div>
+                        <div class="day-cell">28</div>
+                        <div class="day-cell empty"></div>
+                    </div>
+
+                    <div class="time-panel">
+                        <h3>Available Times</h3>
+                        <div class="date-label">Tuesday, Feb 10</div>
+                        <div class="time-list">
+                            <div class="time-option">9:00 AM</div>
+                            <div class="time-option">9:30 AM</div>
+                            <div class="time-option selected">
+                                10:00 AM
+                                <button class="confirm-btn">Confirm</button>
+                            </div>
+                            <div class="time-option">10:30 AM</div>
+                            <div class="time-option">11:00 AM</div>
+                            <div class="time-option">1:00 PM</div>
+                            <div class="time-option">1:30 PM</div>
+                            <div class="time-option">2:00 PM</div>
+                            <div class="time-option">2:30 PM</div>
+                            <div class="time-option">3:00 PM</div>
+                            <div class="time-option">3:30 PM</div>
+                            <div class="time-option">4:00 PM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vibe Check Form (Step 3 Preview) -->
+        <div class="vibe-check visible" style="display: none;">
+            <div class="vibe-header">
+                <span style="font-size: 1.5rem;">&#10024;</span>
+                <h2>Quick Vibe Check</h2>
+            </div>
+            <p class="vibe-subtitle">Help us make this meeting amazing. This takes 30 seconds.</p>
+
+            <div class="vibe-form">
+                <div class="form-group">
+                    <label>How are you feeling about this meeting?</label>
+                    <div class="mood-selector">
+                        <div class="mood-option">
+                            <span class="mood-emoji">&#128640;</span>
+                            <span class="mood-label">Excited</span>
+                        </div>
+                        <div class="mood-option selected">
+                            <span class="mood-emoji">&#128522;</span>
+                            <span class="mood-label">Optimistic</span>
+                        </div>
+                        <div class="mood-option">
+                            <span class="mood-emoji">&#129300;</span>
+                            <span class="mood-label">Curious</span>
+                        </div>
+                        <div class="mood-option">
+                            <span class="mood-emoji">&#128556;</span>
+                            <span class="mood-label">Stressed</span>
+                        </div>
+                        <div class="mood-option">
+                            <span class="mood-emoji">&#128528;</span>
+                            <span class="mood-label">Neutral</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>What's the #1 thing you want to walk away with? <span class="optional">(optional)</span></label>
+                    <input type="text" class="form-input" placeholder="e.g., A clear marketing roadmap for Q2">
+                </div>
+
+                <div class="form-group">
+                    <label>Anything we should know beforehand? <span class="optional">(optional)</span></label>
+                    <textarea class="form-input" placeholder="Context, recent changes, challenges you're facing..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Your name</label>
+                    <input type="text" class="form-input" placeholder="Full name">
+                </div>
+
+                <div class="form-group">
+                    <label>Email address</label>
+                    <input type="email" class="form-input" placeholder="you@company.com">
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary">
+                        Confirm Booking
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <button class="btn btn-secondary">Back</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="powered-by">
+            Powered by <a href="index.html">Llamame</a> &middot; Smart scheduling for professionals
+        </div>
+    </div>
+
+    <!-- Mockup Navigation -->
+    <div class="mockup-nav">
+        <a href="index.html">Landing</a>
+        <a href="booking.html" class="active">Booking</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="event-editor.html">Event Editor</a>
+        <a href="confirmation.html">Confirmation</a>
+        <a href="settings.html">Settings</a>
+    </div>
+
+</body>
+</html>

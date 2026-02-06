@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmed - Llamame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent-1: #ff6b4a;
+            --accent-2: #a855f7;
+            --accent-3: #06b6d4;
+            --green: #4ade80;
+            --gradient-primary: linear-gradient(135deg, #ff6b4a, #a855f7);
+            --gradient-secondary: linear-gradient(135deg, #a855f7, #06b6d4);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-lg: 24px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 40px; overflow-x: hidden;
+        }
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.2; pointer-events: none; z-index: 0; }
+        .bg-orb-1 { width: 500px; height: 500px; background: var(--green); top: -200px; left: 50%; animation: float 20s ease-in-out infinite; }
+        .bg-orb-2 { width: 400px; height: 400px; background: var(--accent-2); bottom: -100px; right: -100px; animation: float 25s ease-in-out infinite reverse; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100px) rotate(720deg); opacity: 0; }
+        }
+
+        .confirm-container {
+            position: relative; z-index: 1; width: 100%; max-width: 580px;
+        }
+
+        /* Success Check */
+        .success-check {
+            text-align: center; margin-bottom: 32px;
+            animation: fadeUp 0.6s ease-out;
+        }
+
+        .check-circle {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: rgba(74, 222, 128, 0.12); border: 2px solid rgba(74, 222, 128, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; animation: checkmark 0.6s ease-out 0.3s both;
+            font-size: 2rem;
+        }
+
+        .success-check h1 {
+            font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px;
+        }
+
+        .success-check p {
+            color: var(--text-secondary); font-size: 1rem;
+        }
+
+        /* Confetti */
+        .confetti-container {
+            position: fixed; top: 0; left: 0; right: 0; height: 100vh;
+            pointer-events: none; z-index: 10; overflow: hidden;
+        }
+
+        .confetti-piece {
+            position: absolute; width: 10px; height: 10px;
+            top: -10px; animation: confetti 3s ease-in-out forwards;
+        }
+
+        /* Booking Card */
+        .booking-card {
+            border-radius: var(--radius-lg); border: 1px solid var(--glass-border);
+            background: var(--bg-card); backdrop-filter: blur(20px); overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); animation: fadeUp 0.6s ease-out 0.2s both;
+        }
+
+        .booking-event-header {
+            padding: 24px; border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: 16px;
+        }
+
+        .event-color-bar {
+            width: 4px; height: 48px; border-radius: 4px; background: var(--accent-2); flex-shrink: 0;
+        }
+
+        .event-header-info h3 { font-size: 1.2rem; font-weight: 700; }
+        .event-header-info span { font-size: 0.85rem; color: var(--text-secondary); }
+
+        .booking-details {
+            padding: 24px; display: flex; flex-direction: column; gap: 16px;
+        }
+
+        .detail-row {
+            display: flex; align-items: flex-start; gap: 14px;
+        }
+
+        .detail-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; flex-shrink: 0;
+        }
+
+        .detail-content { flex: 1; }
+        .detail-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; margin-bottom: 2px; }
+        .detail-value { font-size: 0.95rem; font-weight: 500; }
+        .detail-sub { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+
+        /* Calendar Add Buttons */
+        .add-to-calendar {
+            padding: 24px; border-top: 1px solid var(--glass-border);
+        }
+
+        .cal-label {
+            font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+        }
+
+        .cal-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .cal-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 16px; border-radius: 50px; font-size: 0.82rem; font-weight: 500;
+            border: 1px solid var(--glass-border); background: var(--glass);
+            color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+            text-decoration: none; font-family: inherit;
+        }
+
+        .cal-btn:hover { border-color: rgba(255,255,255,0.15); color: var(--text-primary); }
+
+        /* What to Expect */
+        .expect-section {
+            padding: 24px; border-top: 1px solid var(--glass-border);
+            background: linear-gradient(180deg, rgba(168,85,247,0.04), transparent);
+        }
+
+        .expect-title {
+            font-size: 0.9rem; font-weight: 600; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .timeline { display: flex; flex-direction: column; gap: 0; }
+
+        .timeline-item {
+            display: flex; gap: 14px; padding: 12px 0;
+            position: relative;
+        }
+
+        .timeline-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            flex-shrink: 0; margin-top: 5px;
+            position: relative;
+        }
+
+        .timeline-dot::after {
+            content: ''; position: absolute; top: 14px; left: 4px;
+            width: 2px; height: calc(100% + 10px);
+            background: var(--glass-border);
+        }
+
+        .timeline-item:last-child .timeline-dot::after { display: none; }
+
+        .timeline-text { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+        .timeline-text strong { color: var(--text-primary); }
+
+        /* Actions */
+        .booking-actions {
+            padding: 24px; border-top: 1px solid var(--glass-border);
+            display: flex; gap: 10px; justify-content: center;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 22px; border-radius: 50px; font-weight: 600; font-size: 0.85rem;
+            text-decoration: none; border: none; cursor: pointer; transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary { background: var(--gradient-primary); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-secondary { background: var(--glass); color: var(--text-primary); border: 1px solid var(--glass-border); }
+        .btn-ghost { background: transparent; color: var(--text-secondary); }
+        .btn-ghost:hover { color: var(--text-primary); }
+
+        .powered-by {
+            text-align: center; padding: 20px; font-size: 0.75rem; color: var(--text-muted);
+            animation: fadeUp 0.6s ease-out 0.4s both;
+        }
+        .powered-by a { color: var(--text-secondary); text-decoration: none; font-weight: 600; }
+
+        .mockup-nav {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 200;
+            display: flex; gap: 8px; padding: 8px; background: rgba(18, 18, 26, 0.95);
+            backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .mockup-nav a { padding: 8px 18px; border-radius: 50px; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+        .mockup-nav a:hover { color: var(--text-primary); background: var(--glass); }
+        .mockup-nav a.active { background: var(--gradient-primary); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+
+    <!-- Confetti -->
+    <div class="confetti-container">
+        <div class="confetti-piece" style="left: 10%; background: #ff6b4a; animation-delay: 0s; animation-duration: 2.5s; border-radius: 2px;"></div>
+        <div class="confetti-piece" style="left: 20%; background: #a855f7; animation-delay: 0.2s; animation-duration: 3s; border-radius: 50%;"></div>
+        <div class="confetti-piece" style="left: 35%; background: #06b6d4; animation-delay: 0.4s; animation-duration: 2.8s; border-radius: 2px;"></div>
+        <div class="confetti-piece" style="left: 50%; background: #4ade80; animation-delay: 0.1s; animation-duration: 3.2s; border-radius: 50%;"></div>
+        <div class="confetti-piece" style="left: 65%; background: #fbbf24; animation-delay: 0.6s; animation-duration: 2.6s; border-radius: 2px;"></div>
+        <div class="confetti-piece" style="left: 78%; background: #ff6b4a; animation-delay: 0.3s; animation-duration: 3s; border-radius: 50%;"></div>
+        <div class="confetti-piece" style="left: 90%; background: #a855f7; animation-delay: 0.5s; animation-duration: 2.7s; border-radius: 2px;"></div>
+        <div class="confetti-piece" style="left: 45%; background: #ec4899; animation-delay: 0.7s; animation-duration: 3.1s; border-radius: 2px;"></div>
+    </div>
+
+    <div class="confirm-container">
+        <!-- Success Icon -->
+        <div class="success-check">
+            <div class="check-circle">&#10003;</div>
+            <h1>You're all set!</h1>
+            <p>Your meeting has been booked. A confirmation email is on its way.</p>
+        </div>
+
+        <!-- Booking Details Card -->
+        <div class="booking-card">
+            <div class="booking-event-header">
+                <div class="event-color-bar"></div>
+                <div class="event-header-info">
+                    <h3>Strategy Session</h3>
+                    <span>with MantaRay Digital</span>
+                </div>
+            </div>
+
+            <div class="booking-details">
+                <div class="detail-row">
+                    <div class="detail-icon" style="background: rgba(168,85,247,0.12)">&#128197;</div>
+                    <div class="detail-content">
+                        <div class="detail-label">Date & Time</div>
+                        <div class="detail-value">Tuesday, February 10, 2026</div>
+                        <div class="detail-sub">10:00 AM - 11:00 AM (EST)</div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-icon" style="background: rgba(6,182,212,0.12)">&#128225;</div>
+                    <div class="detail-content">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Google Meet</div>
+                        <div class="detail-sub">Link will be sent 15 minutes before the meeting</div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-icon" style="background: rgba(255,107,74,0.12)">&#128176;</div>
+                    <div class="detail-content">
+                        <div class="detail-label">Payment</div>
+                        <div class="detail-value">$150.00 paid via Stripe</div>
+                        <div class="detail-sub">Receipt sent to your email</div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-icon" style="background: rgba(74,222,128,0.12)">&#10024;</div>
+                    <div class="detail-content">
+                        <div class="detail-label">Vibe Check</div>
+                        <div class="detail-value">Completed - Feeling Optimistic &#128522;</div>
+                        <div class="detail-sub">Your host will review your notes before the call</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add to Calendar -->
+            <div class="add-to-calendar">
+                <div class="cal-label">Add to your calendar</div>
+                <div class="cal-buttons">
+                    <a href="#" class="cal-btn">&#128197; Google Calendar</a>
+                    <a href="#" class="cal-btn">&#128231; Outlook</a>
+                    <a href="#" class="cal-btn">&#127823; Apple Calendar</a>
+                    <a href="#" class="cal-btn">&#128229; Download .ics</a>
+                </div>
+            </div>
+
+            <!-- What to Expect -->
+            <div class="expect-section">
+                <div class="expect-title">&#128161; What happens next</div>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: var(--green)"></div>
+                        <div class="timeline-text"><strong>Now:</strong> Confirmation email sent with meeting details and receipt</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: var(--accent-3)"></div>
+                        <div class="timeline-text"><strong>24 hours before:</strong> Reminder email with preparation tips</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: var(--accent-2)"></div>
+                        <div class="timeline-text"><strong>15 minutes before:</strong> Google Meet link delivered via email + WhatsApp</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background: var(--accent-1)"></div>
+                        <div class="timeline-text"><strong>After the meeting:</strong> Summary notes and any follow-up actions emailed to you</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="booking-actions">
+                <a href="#" class="btn btn-secondary">Reschedule</a>
+                <a href="#" class="btn btn-ghost">Cancel booking</a>
+            </div>
+        </div>
+
+        <div class="powered-by">
+            Powered by <a href="index.html">Llamame</a> &middot; Smart scheduling for professionals
+        </div>
+    </div>
+
+    <div class="mockup-nav">
+        <a href="index.html">Landing</a>
+        <a href="booking.html">Booking</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="event-editor.html">Event Editor</a>
+        <a href="confirmation.html" class="active">Confirmation</a>
+        <a href="settings.html">Settings</a>
+    </div>
+
+</body>
+</html>
