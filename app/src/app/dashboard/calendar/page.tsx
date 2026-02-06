@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { demoUser } from "@/lib/demo-data";
 import type { MeetingListItem } from "@/lib/types";
+import type { CalendarEvent } from "@/lib/calendar/types";
 import {
   useTodayMeetings,
   useTomorrowMeetings,
@@ -211,6 +212,25 @@ export default function CalendarPage() {
   const [blockTimeOpen, setBlockTimeOpen] = useState(false);
   const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
 
+  // External events state
+  const [externalEvents, setExternalEvents] = useState<CalendarEvent[]>([]);
+  const [externalLoading, setExternalLoading] = useState(true);
+
+  // Fetch external events on mount
+  useEffect(() => {
+    const now = new Date();
+    const timeMin = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const timeMax = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    fetch(`/api/calendar/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`)
+      .then(res => res.json())
+      .then(data => {
+        setExternalEvents(data.events ?? []);
+        setExternalLoading(false);
+      })
+      .catch(() => setExternalLoading(false));
+  }, []);
+
   // Reschedule state
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [rescheduleMeeting, setRescheduleMeeting] = useState<MeetingListItem | null>(null);
@@ -338,6 +358,12 @@ export default function CalendarPage() {
               </div>
             </div>
 
+            <div className="flex items-center gap-3 text-[0.65rem] text-text-muted px-6 pb-2">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-violet/60" /> Llamame</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent/70" /> External</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose/70" /> Blocked</span>
+            </div>
+
             <div className="grid grid-cols-7">
               {DAYS.map((d) => (
                 <div
@@ -358,6 +384,10 @@ export default function CalendarPage() {
                   new Date(year, month, day).getDay() !== 0 &&
                   new Date(year, month, day).getDay() !== 6;
                 const hasBlock = day !== null && blocksForDate(dateStr(day)).length > 0;
+                const hasExternalEvent = day !== null && externalEvents.some(e => {
+                  const d = new Date(e.startTime);
+                  return d.getDate() === day && d.getMonth() === month && d.getFullYear() === year;
+                });
 
                 return (
                   <div
@@ -383,6 +413,9 @@ export default function CalendarPage() {
                           </span>
                           {hasBlock && (
                             <span className="w-2 h-2 rounded-full bg-rose/70 shrink-0" title="Blocked time" />
+                          )}
+                          {hasExternalEvent && (
+                            <span className="w-2 h-2 rounded-full bg-accent/70 shrink-0" title="External event" />
                           )}
                         </div>
                         {hasMeeting && (
@@ -470,10 +503,38 @@ export default function CalendarPage() {
                     </div>
                   </div>
                 ))}
+                {/* External Calendar Events */}
+                {externalEvents.filter(e => {
+                  const eventDate = new Date(e.startTime);
+                  return eventDate.getDate() === selectedDay &&
+                         eventDate.getMonth() === month &&
+                         eventDate.getFullYear() === year;
+                }).map(e => (
+                  <div key={e.externalId} className="flex items-center gap-3 p-3 rounded-lg border border-accent/20 bg-accent/[0.04] hover:bg-accent/[0.07] transition">
+                    <div className="w-1 h-10 rounded-full bg-accent/50" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold truncate flex items-center gap-1.5">
+                        {e.title}
+                        <span className="text-[0.6rem] font-medium px-1.5 py-0.5 rounded bg-accent/10 text-accent uppercase">
+                          {e.provider === "google" ? "GCal" : "Outlook"}
+                        </span>
+                      </div>
+                      <div className="text-xs text-text-muted">
+                        {new Date(e.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} — {new Date(e.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </div>
+                    </div>
+                  </div>
+                ))}
                 {isCurrentMonth &&
                   selectedDay !== today &&
                   selectedDay !== today + 1 &&
-                  blocksForDate(dateStr(selectedDay)).length === 0 && (
+                  blocksForDate(dateStr(selectedDay)).length === 0 &&
+                  externalEvents.filter(e => {
+                    const eventDate = new Date(e.startTime);
+                    return eventDate.getDate() === selectedDay &&
+                           eventDate.getMonth() === month &&
+                           eventDate.getFullYear() === year;
+                  }).length === 0 && (
                     <p className="text-sm text-text-muted text-center py-6">
                       No meetings on this day
                     </p>
@@ -613,6 +674,19 @@ export default function CalendarPage() {
                               </div>
                             );
                           })}
+                          {/* External events in this slot */}
+                          {!blocked && externalEvents.filter(e => {
+                            const eventDate = new Date(e.startTime);
+                            const eventDay = eventDate.getDate();
+                            const eventHour = eventDate.getHours();
+                            return eventDay === columnDayNum && eventHour === hour &&
+                                   eventDate.getMonth() === month && eventDate.getFullYear() === year;
+                          }).map(e => (
+                            <div key={e.externalId} className="absolute inset-x-1 top-1 rounded-md px-2 py-1.5 text-xs border bg-accent/20 border-accent/30">
+                              <div className="font-semibold text-accent truncate">{e.title}</div>
+                              <div className="text-accent/60 truncate text-[10px]">{e.provider === "google" ? "Google" : "Outlook"}</div>
+                            </div>
+                          ))}
                         </div>
                       );
                     })}
