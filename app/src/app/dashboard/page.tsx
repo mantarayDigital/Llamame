@@ -12,7 +12,7 @@ import {
   RefreshCw,
   AlertTriangle,
 } from "lucide-react";
-import { btn, card, statusStyles as themeStatusStyles, colorToBg, locationLabels as themeLocationLabels, currencyFormatter, toggle } from "@/lib/theme";
+import { btn, statusStyles as themeStatusStyles, colorToBg, locationLabels as themeLocationLabels, currencyFormatter, toggle } from "@/lib/theme";
 import type { MeetingListItem, EventType, ClientListItem } from "@/lib/types";
 import {
   useDashboardStats,
@@ -20,20 +20,8 @@ import {
   useTomorrowMeetings,
   useEventTypes,
   useClients,
-  demoAiBrief,
-  demoAiInsight,
-  demoUser,
-  demoTodayMeetings,
-  demoTomorrowMeetings,
-  demoEventTypes,
-  demoClients,
-  isConvexConnected,
+  useCurrentUserId,
 } from "@/lib/data";
-import {
-  generateMeetingBrief,
-  analyzeVibeCheck,
-  type MeetingBrief,
-} from "@/lib/ai";
 import { getEnergyForTime, checkFatigue, type FatigueWarning } from "@/lib/scheduling";
 import RescheduleModal from "@/components/RescheduleModal";
 
@@ -61,12 +49,14 @@ function shortDate(d: Date): string {
 }
 
 export default function DashboardPage() {
+  // Resolve real Convex user ID (falls back to demo ID when not connected)
+  const currentUserId = useCurrentUserId();
   // Convex hooks (fall back to demo data when not connected)
-  const dashboardStats = useDashboardStats(isConvexConnected ? demoUser.id : undefined);
-  const todayMeetings: MeetingListItem[] = isConvexConnected ? useTodayMeetings(demoUser.id) : demoTodayMeetings;
-  const tomorrowMeetings: MeetingListItem[] = isConvexConnected ? useTomorrowMeetings(demoUser.id) : demoTomorrowMeetings;
-  const eventTypes = useEventTypes(isConvexConnected ? demoUser.id : undefined) as EventType[];
-  const clients = useClients(isConvexConnected ? demoUser.id : undefined) as ClientListItem[];
+  const dashboardStats = useDashboardStats(currentUserId);
+  const todayMeetings = useTodayMeetings(currentUserId) as unknown as MeetingListItem[];
+  const tomorrowMeetings = useTomorrowMeetings(currentUserId) as unknown as MeetingListItem[];
+  const eventTypes = useEventTypes(currentUserId) as unknown as EventType[];
+  const clients = useClients(currentUserId) as unknown as ClientListItem[];
 
   // Dynamic date
   const now = new Date();
@@ -77,29 +67,12 @@ export default function DashboardPage() {
   const todayShort = shortDate(now);
   const tomorrowShort = shortDate(tomorrow);
 
-  // AI Brief state
-  const [aiBrief, setAiBrief] = useState<MeetingBrief | null>(null);
-  const [aiInsight, setAiInsight] = useState<string>(demoAiInsight);
-
   // Reschedule modal state
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [rescheduleMeeting, setRescheduleMeeting] = useState<MeetingListItem | null>(null);
 
   // Fatigue warnings
   const [fatigueWarnings, setFatigueWarnings] = useState<FatigueWarning[]>([]);
-
-  // Generate AI brief for the next meeting
-  useEffect(() => {
-    const nextMeeting = todayMeetings[0];
-    if (!nextMeeting) return;
-    generateMeetingBrief({
-      clientName: nextMeeting.client,
-      clientEmail: "",
-      eventType: nextMeeting.title,
-      meetingNumber: 3,
-      lastVibeCheck: "Excited",
-    }).then(setAiBrief);
-  }, [todayMeetings]);
 
   // Check fatigue
   useEffect(() => {
@@ -119,15 +92,6 @@ export default function DashboardPage() {
     },
     []
   );
-
-  const briefData = aiBrief ?? {
-    summary: demoAiBrief.summary,
-    suggestedTopics: demoAiBrief.suggestedTopics,
-    clientInsight: "",
-    preparationTips: [],
-  };
-  const briefClientName = aiBrief ? todayMeetings[0]?.client?.split(" ")[0] ?? "Client" : demoAiBrief.clientName;
-  const briefCompany = aiBrief ? todayMeetings[0]?.company ?? "" : demoAiBrief.clientCompany;
 
   const stats = [
     {
@@ -180,18 +144,18 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* AI Banner */}
+      {/* AI Banner — Coming Soon */}
       <div className="p-4 px-5 rounded-xl bg-gradient-to-r from-accent/10 to-violet/[0.06] border border-accent/15 flex items-center gap-3.5 mb-7">
         <Sparkles className="w-5 h-5 text-accent shrink-0" />
         <div className="flex-1">
-          <strong className="text-sm block mb-0.5">AI Insight</strong>
+          <strong className="text-sm block mb-0.5">AI Insights</strong>
           <p className="text-sm text-text-sec">
-            {aiInsight}
+            Personalized meeting briefs, client intelligence, and smart scheduling suggestions.
           </p>
         </div>
-        <button className="px-4 py-2 rounded-lg text-xs font-semibold bg-white/[0.03] text-text border border-border hover:bg-bg-card-hover transition shrink-0">
-          View Details
-        </button>
+        <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20 shrink-0">
+          Coming Soon
+        </span>
       </div>
 
       {/* Stats */}
@@ -219,23 +183,14 @@ export default function DashboardPage() {
             </span>
           </div>
         ))}
-        {/* Energy Card */}
-        <div className="p-5 rounded-xl border border-violet/20 bg-gradient-to-br from-violet/[0.06] to-accent/[0.04]">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-text-muted font-medium">
-              Today&apos;s Energy Score
-            </span>
-            <div className="text-3xl font-bold flex items-center gap-2">
-              <span className="text-green text-sm">&#9679;</span>{" "}
-              {dashboardStats.energyScore}
-            </div>
-          </div>
-          <div className="h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-violet to-accent"
-              style={{ width: `${dashboardStats.energyScore}%` }}
-            />
-          </div>
+        {/* Energy Card — Coming Soon */}
+        <div className="p-5 rounded-xl border border-violet/20 bg-gradient-to-br from-violet/[0.06] to-accent/[0.04] flex flex-col items-center justify-center text-center">
+          <span className="text-xs text-text-muted font-medium mb-2">
+            Energy Score
+          </span>
+          <span className="inline-block px-2.5 py-0.5 rounded-full text-[0.68rem] font-semibold bg-violet/10 text-violet border border-violet/20">
+            Coming Soon
+          </span>
         </div>
       </div>
 
@@ -269,35 +224,19 @@ export default function DashboardPage() {
               Today &middot; {todayShort}
             </div>
 
-            {/* AI Brief */}
+            {/* AI Brief — Coming Soon */}
             <div className="mx-2 p-4 rounded-lg bg-gradient-to-r from-violet/[0.08] to-accent/[0.05] border border-violet/15 mb-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-violet mb-2.5">
-                <Sparkles className="w-3 h-3" /> AI Brief for next meeting
-              </div>
-              <p className="text-sm text-text-sec leading-relaxed">
-                <strong className="text-text">
-                  {briefClientName} from {briefCompany}
-                </strong>{" "}
-                &mdash; {briefData.summary}
-              </p>
-              <ul className="mt-2 space-y-0.5">
-                {briefData.suggestedTopics.map((item) => (
-                  <li
-                    key={item}
-                    className="text-sm text-text-sec flex items-center gap-2"
-                  >
-                    <span className="text-violet font-bold">&gt;</span> {item}
-                  </li>
-                ))}
-              </ul>
-              {briefData.preparationTips.length > 0 && (
-                <div className="mt-3 pt-2 border-t border-violet/10">
-                  <div className="text-xs font-semibold text-violet mb-1">Prep Tips</div>
-                  {briefData.preparationTips.map((tip) => (
-                    <p key={tip} className="text-xs text-text-muted">&bull; {tip}</p>
-                  ))}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-semibold text-violet">
+                  <Sparkles className="w-3 h-3" /> AI Meeting Brief
                 </div>
-              )}
+                <span className="px-2 py-0.5 rounded-full text-[0.6rem] font-semibold bg-violet/10 text-violet border border-violet/20">
+                  Coming Soon
+                </span>
+              </div>
+              <p className="text-xs text-text-muted mt-2">
+                AI-generated preparation notes, talking points, and client insights before each meeting.
+              </p>
             </div>
 
             {todayMeetings.map((m) => {

@@ -2,20 +2,26 @@
  * POST /api/calendar/disconnect
  *
  * Disconnect an external calendar provider.
+ * Revokes the OAuth token and updates the integration status in Convex.
  *
  * Body: { provider: "google" | "microsoft", userId: string }
- *
- * In production this would:
- * 1. Revoke the OAuth tokens with the provider
- * 2. Stop any active push notification watches/subscriptions
- * 3. Delete the CalendarConnection from the database
- * 4. Optionally clean up synced events
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../../../convex/_generated/api";
 import type { CalendarProvider } from "@/lib/calendar/types";
 
+const convex = new ConvexHttpClient(
+  process.env.NEXT_PUBLIC_CONVEX_URL ?? ""
+);
+
 const VALID_PROVIDERS: CalendarProvider[] = ["google", "microsoft"];
+
+const PROVIDER_MAP: Record<CalendarProvider, string> = {
+  google: "google_calendar",
+  microsoft: "outlook",
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,18 +45,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // TODO: Look up the CalendarConnection from database
-    // TODO: If Google, call stopGoogleWatch() to cancel push notifications
-    // TODO: If Microsoft, delete the Graph subscription
-    // TODO: Revoke the OAuth tokens with the provider:
-    //   - Google: POST https://oauth2.googleapis.com/revoke?token=...
-    //   - Microsoft: No standard revocation endpoint; just delete the token
-    // TODO: Delete the CalendarConnection record from the database
-    // TODO: Optionally remove synced external events from Llamame
+    // Look up the integration from Convex
+    const convexProvider = PROVIDER_MAP[provider];
+    const integration = await convex.query(api.integrations.getByUserProvider, {
+      userId: userId as any,
+      provider: convexProvider as any,
+    });
 
-    console.log(
-      `[Calendar Disconnect] Disconnected ${provider} for user ${userId}`,
-    );
+    if (!integration) {
+      return NextResponse.json(
+        { error: `No ${provider} connection found` },
+        { status: 404 },
+      );
+    }
+
+    // Revoke the OAuth token with the provider
+    if (integration.accessToken) {
+      try {
+        if (provider === "google") {
+          await fetch(
+            `https://oauth2.googleapis.com/revoke?token=${integration.accessToken}`,
+            { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" } },
+          );
+        }
+        // Microsoft doesn't have a standard revocation endpoint
+      } catch (revokeErr) {
+        // Token revocation is best-effort; continue with disconnect
+        console.warn("[Calendar Disconnect] Token revocation failed:", revokeErr);
+      }
+    }
+
+    // Update the integration status in Convex
+    await convex.mutation(api.integrations.disconnect, {
+      id: integration._id,
+    });
 
     return NextResponse.json({
       success: true,

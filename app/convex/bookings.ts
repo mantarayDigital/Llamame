@@ -260,3 +260,26 @@ export const cancel = mutation({
     });
   },
 });
+
+export const listWithPayments = query({
+  args: {
+    hostId: v.id("users"),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { hostId, limit }) => {
+    const all = await ctx.db
+      .query("bookings")
+      .withIndex("by_host", (q) => q.eq("hostId", hostId))
+      .order("desc")
+      .collect();
+    const withPayments = all.filter((b) => b.paymentStatus !== undefined);
+    const result = limit ? withPayments.slice(0, limit) : withPayments;
+    // Enrich with event type title
+    return Promise.all(
+      result.map(async (b) => {
+        const et = await ctx.db.get(b.eventTypeId);
+        return { ...b, eventTypeTitle: et?.title ?? "Unknown" };
+      })
+    );
+  },
+});

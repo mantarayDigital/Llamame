@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { appConfig } from "@/lib/config";
-import { useUserByHandle, useActiveEventTypes, demoEventTypes, isConvexConnected } from "@/lib/data";
-import type { EventType } from "@/lib/types";
+import { useUserByHandle, useActiveEventTypes } from "@/lib/data";
 import { Clock, Video, Phone, Monitor, MapPin, LinkIcon } from "lucide-react";
 import { locationLabels as locationLabelMap } from "@/lib/theme";
 
@@ -13,7 +12,6 @@ import { locationLabels as locationLabelMap } from "@/lib/theme";
  * URL: /{handle}
  *
  * Fetches the user by handle from Convex and loads their active event types.
- * Falls back to demo data when Convex isn't connected.
  */
 
 const locationIcons: Record<string, React.ElementType> = {
@@ -30,15 +28,7 @@ export default function PublicBookingPage() {
   const handle = params.handle;
 
   const user = useUserByHandle(handle);
-  const liveEvents = useActiveEventTypes(
-    isConvexConnected && user ? (user as any)._id ?? user.id : undefined
-  );
-  const eventTypes: EventType[] =
-    isConvexConnected && liveEvents.length > 0
-      ? liveEvents
-      : user
-        ? demoEventTypes.filter((et) => et.isActive)
-        : [];
+  const eventTypes = useActiveEventTypes(user ? (user as any)._id : undefined) ?? [];
 
   if (!user) {
     return (
@@ -76,9 +66,9 @@ export default function PublicBookingPage() {
         {/* Host info */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-violet flex items-center justify-center text-3xl font-bold mx-auto mb-4">
-            {user.name.charAt(0)}
+            {(user.name ?? "").charAt(0)}
           </div>
-          <h1 className="text-2xl font-bold mb-1">{user.name}</h1>
+          <h1 className="text-2xl font-bold mb-1">{user.name ?? ""}</h1>
           <p className="text-text-muted text-sm font-mono">
             {appConfig.domain}/{user.handle}
           </p>
@@ -95,7 +85,7 @@ export default function PublicBookingPage() {
             const LocIcon = locationIcons[et.location] ?? LinkIcon;
             return (
               <Link
-                key={et.id}
+                key={(et as any)._id}
                 href={`/${handle}/${et.slug}`}
                 className="block p-5 rounded-xl border border-border bg-bg-card hover:bg-bg-card-hover hover:border-border-hover transition group"
               >

@@ -16,7 +16,7 @@ import {
   X,
   Sparkles,
 } from "lucide-react";
-import { useClients, demoClients, isConvexConnected, demoUser } from "@/lib/data";
+import { useClients, useCurrentUserId } from "@/lib/data";
 import type { ClientListItem } from "@/lib/types";
 import { btn, input as inputStyles, card, table as tableStyles, tagColors, currencyFormatter, statsGrid } from "@/lib/theme";
 import { generateClientIntelligence, type ClientIntelligence } from "@/lib/ai";
@@ -38,104 +38,12 @@ interface ClientRow {
   meetingHistory: { date: string; type: string; outcome: string }[];
 }
 
-/** Demo client rows with extended data */
-const demoClientRows: ClientRow[] = [
-  {
-    id: "cli_001",
-    name: "Sarah Chen",
-    initials: "SC",
-    gradient: "from-accent to-violet",
-    email: "sarah@techflow.io",
-    company: "TechFlow Inc",
-    meetings: 12,
-    revenue: 1800,
-    noShows: 0,
-    lastMeeting: "3 days ago",
-    vibe: "\u{1F680}",
-    tags: ["VIP", "Enterprise"],
-    meetingHistory: [
-      { date: "2025-01-15", type: "Strategy Session", outcome: "completed" },
-      { date: "2025-01-02", type: "Discovery Call", outcome: "completed" },
-      { date: "2024-12-18", type: "Strategy Session", outcome: "completed" },
-    ],
-  },
-  {
-    id: "cli_002",
-    name: "James Rodriguez",
-    initials: "JR",
-    gradient: "from-violet to-rose",
-    email: "james@startupxyz.com",
-    company: "StartupXYZ",
-    meetings: 1,
-    revenue: 0,
-    noShows: 0,
-    lastMeeting: "Yesterday",
-    vibe: "\u{1F914}",
-    tags: ["New"],
-    meetingHistory: [
-      { date: "2025-01-18", type: "Discovery Call", outcome: "completed" },
-    ],
-  },
-  {
-    id: "cli_003",
-    name: "Ana Kovacs",
-    initials: "AK",
-    gradient: "from-amber to-rose",
-    email: "ana@growthlab.com",
-    company: "GrowthLab",
-    meetings: 8,
-    revenue: 1200,
-    noShows: 1,
-    lastMeeting: "2 days ago",
-    vibe: "\u{1F60A}",
-    tags: ["Returning"],
-    meetingHistory: [
-      { date: "2025-01-16", type: "Growth Review", outcome: "completed" },
-      { date: "2025-01-08", type: "Strategy Session", outcome: "completed" },
-      { date: "2024-12-20", type: "Discovery Call", outcome: "no-show" },
-    ],
-  },
-  {
-    id: "cli_004",
-    name: "Lucas Sharma",
-    initials: "LS",
-    gradient: "from-accent to-green",
-    email: "lucas@designco.com",
-    company: "DesignCo",
-    meetings: 5,
-    revenue: 750,
-    noShows: 0,
-    lastMeeting: "5 days ago",
-    vibe: "\u{1F60A}",
-    tags: [],
-    meetingHistory: [
-      { date: "2025-01-13", type: "Design Review", outcome: "completed" },
-      { date: "2024-12-30", type: "Strategy Session", outcome: "completed" },
-    ],
-  },
-  {
-    id: "cli_005",
-    name: "Emily Watson",
-    initials: "EW",
-    gradient: "from-violet to-accent",
-    email: "emily@brandforge.co",
-    company: "BrandForge",
-    meetings: 3,
-    revenue: 450,
-    noShows: 0,
-    lastMeeting: "1 week ago",
-    vibe: "\u{1F680}",
-    tags: ["Returning"],
-    meetingHistory: [
-      { date: "2025-01-11", type: "Brand Workshop", outcome: "completed" },
-      { date: "2024-12-28", type: "Discovery Call", outcome: "completed" },
-      { date: "2024-12-15", type: "Follow-up", outcome: "completed" },
-    ],
-  },
-];
 
 
 export default function ClientsPage() {
+  const currentUserId = useCurrentUserId();
+  const rawClients = useClients(currentUserId);
+
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null);
@@ -171,7 +79,50 @@ export default function ClientsPage() {
     };
   }, [selectedClient]);
 
-  const clients = demoClientRows;
+  const vibeToEmoji: Record<string, string> = {
+    Excited: "\u{1F680}",
+    Curious: "\u{1F914}",
+    Optimistic: "\u{1F60A}",
+    Nervous: "\u{1F605}",
+    Frustrated: "\u{1F620}",
+  };
+
+  const gradients = [
+    "from-accent to-violet",
+    "from-violet to-rose",
+    "from-amber to-rose",
+    "from-accent to-green",
+    "from-violet to-accent",
+  ];
+
+  const clients: ClientRow[] = rawClients.map((c: any, i: number) => {
+    const names = c.name.split(" ");
+    const initials = names.map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+    const daysDiff = c.lastMeetingAt ? Math.round((Date.now() - c.lastMeetingAt) / 86_400_000) : null;
+    let lastMeeting = "Never";
+    if (daysDiff !== null) {
+      if (daysDiff === 0) lastMeeting = "Today";
+      else if (daysDiff === 1) lastMeeting = "Yesterday";
+      else if (daysDiff < 7) lastMeeting = `${daysDiff} days ago`;
+      else if (daysDiff < 30) lastMeeting = `${Math.round(daysDiff / 7)} weeks ago`;
+      else lastMeeting = `${Math.round(daysDiff / 30)} months ago`;
+    }
+    return {
+      id: c._id,
+      name: c.name,
+      initials,
+      gradient: gradients[i % gradients.length],
+      email: c.email,
+      company: c.company ?? "",
+      meetings: c.totalMeetings,
+      revenue: c.totalRevenue,
+      noShows: c.noShowCount,
+      lastMeeting,
+      vibe: vibeToEmoji[c.lastVibeCheck ?? ""] ?? "\u{1F60A}",
+      tags: c.tags ?? [],
+      meetingHistory: [],
+    };
+  });
 
   const allTags = Array.from(
     new Set(clients.flatMap((c) => c.tags))

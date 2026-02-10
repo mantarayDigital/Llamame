@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCurrentUserId, useAuditLog } from "@/lib/data";
 import {
   Search,
   Filter,
@@ -108,184 +109,6 @@ function getActionColor(action: string): string {
   return "text-text-sec";
 }
 
-// ─── Demo data ───────────────────────────────────────────────────
-
-const demoAuditEntries: AuditEntry[] = [
-  {
-    id: "audit_001",
-    timestamp: "2026-02-06 09:15:23",
-    user: "You",
-    action: "booking.created",
-    resource: "bookings",
-    details: "Strategy Call with Sarah Chen on Feb 10 at 2:00 PM",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_002",
-    timestamp: "2026-02-06 09:02:11",
-    user: "System",
-    action: "billing.payment_received",
-    resource: "billing",
-    details: "Invoice #INV-2024-047 — $150.00 received via Stripe",
-    ipAddress: "—",
-  },
-  {
-    id: "audit_003",
-    timestamp: "2026-02-06 08:45:30",
-    user: "You",
-    action: "event_type.updated",
-    resource: "events",
-    details: 'Updated "Discovery Call" duration from 30 min to 45 min',
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_004",
-    timestamp: "2026-02-06 08:30:00",
-    user: "You",
-    action: "login",
-    resource: "settings",
-    details: "Logged in from Chrome on macOS",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_005",
-    timestamp: "2026-02-05 17:22:14",
-    user: "You",
-    action: "booking.cancelled",
-    resource: "bookings",
-    details: "Quick Check-in with James Rodriguez — cancelled by client",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_006",
-    timestamp: "2026-02-05 16:10:45",
-    user: "You",
-    action: "workflow.activated",
-    resource: "workflows",
-    details: 'Activated workflow "Send confirmation email on booking"',
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_007",
-    timestamp: "2026-02-05 15:33:12",
-    user: "You",
-    action: "client.created",
-    resource: "clients",
-    details: "Added new client: Emily Watson (emily@brandforge.co)",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_008",
-    timestamp: "2026-02-05 14:20:00",
-    user: "You",
-    action: "settings.updated",
-    resource: "settings",
-    details: "Updated profile: changed timezone to America/New_York",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_009",
-    timestamp: "2026-02-05 13:05:33",
-    user: "You",
-    action: "booking.rescheduled",
-    resource: "bookings",
-    details:
-      "Rescheduled Strategy Call with Ana Kovacs from Feb 6 to Feb 8 at 10:00 AM",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_010",
-    timestamp: "2026-02-05 11:48:20",
-    user: "You",
-    action: "event_type.created",
-    resource: "events",
-    details: 'Created new event type "Portfolio Review" (60 min, $200)',
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_011",
-    timestamp: "2026-02-04 16:30:00",
-    user: "You",
-    action: "billing.plan_upgraded",
-    resource: "billing",
-    details: "Upgraded plan from Free to Pro ($12/mo)",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_012",
-    timestamp: "2026-02-04 15:15:42",
-    user: "You",
-    action: "api_key.created",
-    resource: "settings",
-    details: 'Created API key "Production Integration" with read/write scope',
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_013",
-    timestamp: "2026-02-04 14:00:18",
-    user: "You",
-    action: "webhook.created",
-    resource: "settings",
-    details:
-      "Created webhook endpoint: https://api.example.com/llamame-events",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_014",
-    timestamp: "2026-02-04 12:45:00",
-    user: "You",
-    action: "client.updated",
-    resource: "clients",
-    details: 'Updated client Sarah Chen — added tag "Enterprise"',
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_015",
-    timestamp: "2026-02-04 10:20:55",
-    user: "You",
-    action: "workflow.deactivated",
-    resource: "workflows",
-    details: 'Deactivated workflow "Send SMS reminder 1h before"',
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_016",
-    timestamp: "2026-02-04 09:10:30",
-    user: "You",
-    action: "settings.updated",
-    resource: "settings",
-    details: "Updated branding: changed accent color to Violet",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_017",
-    timestamp: "2026-02-03 17:55:10",
-    user: "You",
-    action: "password_changed",
-    resource: "settings",
-    details: "Password changed successfully",
-    ipAddress: "192.168.1.42",
-  },
-  {
-    id: "audit_018",
-    timestamp: "2026-02-03 16:30:00",
-    user: "System",
-    action: "booking.created",
-    resource: "bookings",
-    details:
-      "Discovery Call with Lucas Sharma on Feb 7 at 11:00 AM — booked via public link",
-    ipAddress: "10.0.0.55",
-  },
-  {
-    id: "audit_019",
-    timestamp: "2026-02-03 14:12:44",
-    user: "You",
-    action: "settings.updated",
-    resource: "settings",
-    details: "Updated notification preferences: enabled SMS reminders",
-    ipAddress: "192.168.1.42",
-  },
-];
 
 // ─── Helpers ─────────────────────────────────────────────────────
 
@@ -324,15 +147,38 @@ function formatAction(action: string): string {
 // ─── Component ───────────────────────────────────────────────────
 
 export default function AuditLogPage() {
+  const currentUserId = useCurrentUserId();
+
   const [search, setSearch] = useState("");
   const [resourceFilter, setResourceFilter] = useState<ResourceType>("all");
   const [dateRange, setDateRange] = useState<DateRange>("all");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const rawAuditLog = useAuditLog(currentUserId, {
+    resource: resourceFilter !== "all" ? resourceFilter : undefined,
+  });
+
+  const entries: AuditEntry[] = rawAuditLog.map((e: any) => ({
+    id: e._id,
+    timestamp: new Date(e.createdAt).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    user: "You",
+    action: e.action,
+    resource: e.resource,
+    details: typeof e.metadata === "object" && e.metadata
+      ? Object.entries(e.metadata).map(([k, v]) => `${k}: ${v}`).join(", ")
+      : "",
+    ipAddress: e.ipAddress ?? "\u2014",
+  }));
+
   const pageSize = 15;
 
   // Filter entries
-  const filtered = demoAuditEntries.filter((entry) => {
+  const filtered = entries.filter((entry) => {
     const matchesSearch =
       search === "" ||
       entry.user.toLowerCase().includes(search.toLowerCase()) ||
@@ -357,17 +203,17 @@ export default function AuditLogPage() {
   const showEnd = Math.min(currentPage * pageSize, filtered.length);
 
   // Stats
-  const todayEvents = demoAuditEntries.filter((e) =>
+  const todayEvents = entries.filter((e) =>
     e.timestamp.startsWith("2026-02-06"),
   ).length;
-  const securityEvents = demoAuditEntries.filter(
+  const securityEvents = entries.filter(
     (e) =>
       e.action === "login" ||
       e.action === "password_changed" ||
       e.action.startsWith("api_key") ||
       e.action.startsWith("webhook"),
   ).length;
-  const systemChanges = demoAuditEntries.filter(
+  const systemChanges = entries.filter(
     (e) =>
       e.action.startsWith("settings") ||
       e.action.startsWith("billing") ||

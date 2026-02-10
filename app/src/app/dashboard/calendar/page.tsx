@@ -15,15 +15,12 @@ import {
   Sparkles,
   Lock,
 } from "lucide-react";
-import { demoUser } from "@/lib/demo-data";
 import type { MeetingListItem } from "@/lib/types";
 import type { CalendarEvent } from "@/lib/calendar/types";
 import {
   useTodayMeetings,
   useTomorrowMeetings,
-  demoTodayMeetings,
-  demoTomorrowMeetings,
-  isConvexConnected,
+  useCurrentUserId,
 } from "@/lib/data";
 import { btn, card, colorToOverlay, input as inputStyles } from "@/lib/theme";
 import RescheduleModal from "@/components/RescheduleModal";
@@ -216,31 +213,32 @@ export default function CalendarPage() {
   const [externalEvents, setExternalEvents] = useState<CalendarEvent[]>([]);
   const [externalLoading, setExternalLoading] = useState(true);
 
-  // Fetch external events on mount
+  // Reschedule state
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [rescheduleMeeting, setRescheduleMeeting] = useState<MeetingListItem | null>(null);
+
+  const currentUserId = useCurrentUserId();
+
+  // Fetch external events when userId is available
   useEffect(() => {
+    if (!currentUserId) {
+      setExternalLoading(false);
+      return;
+    }
     const now = new Date();
     const timeMin = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const timeMax = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    fetch(`/api/calendar/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`)
+    fetch(`/api/calendar/events?userId=${encodeURIComponent(currentUserId)}&timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`)
       .then(res => res.json())
       .then(data => {
         setExternalEvents(data.events ?? []);
         setExternalLoading(false);
       })
       .catch(() => setExternalLoading(false));
-  }, []);
-
-  // Reschedule state
-  const [rescheduleOpen, setRescheduleOpen] = useState(false);
-  const [rescheduleMeeting, setRescheduleMeeting] = useState<MeetingListItem | null>(null);
-
-  const todayMeetings: MeetingListItem[] = isConvexConnected
-    ? useTodayMeetings(demoUser.id)
-    : demoTodayMeetings;
-  const tomorrowMeetings: MeetingListItem[] = isConvexConnected
-    ? useTomorrowMeetings(demoUser.id)
-    : demoTomorrowMeetings;
+  }, [currentUserId]);
+  const todayMeetings = useTodayMeetings(currentUserId) as unknown as MeetingListItem[];
+  const tomorrowMeetings = useTomorrowMeetings(currentUserId) as unknown as MeetingListItem[];
 
   // Combine for display
   const allMeetings = [...todayMeetings, ...tomorrowMeetings];
@@ -376,13 +374,12 @@ export default function CalendarPage() {
               {calendarDays.map((day, i) => {
                 const isToday = isCurrentMonth && day === today;
                 const isSelected = day === selectedDay && isCurrentMonth;
-                // Mock: show dots on weekdays that have meetings
+                // Show dots on days that have actual meetings
                 const hasMeeting =
                   day !== null &&
-                  day >= today - 1 &&
-                  day <= today + 5 &&
-                  new Date(year, month, day).getDay() !== 0 &&
-                  new Date(year, month, day).getDay() !== 6;
+                  isCurrentMonth &&
+                  ((day === today && todayMeetings.length > 0) ||
+                    (day === today + 1 && tomorrowMeetings.length > 0));
                 const hasBlock = day !== null && blocksForDate(dateStr(day)).length > 0;
                 const hasExternalEvent = day !== null && externalEvents.some(e => {
                   const d = new Date(e.startTime);
@@ -549,16 +546,25 @@ export default function CalendarPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-text-sec">Total meetings</span>
                   <span className="font-semibold">
-                    {todayMeetings.length + tomorrowMeetings.length + 3}
+                    {todayMeetings.length + tomorrowMeetings.length}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-text-sec">Hours booked</span>
-                  <span className="font-semibold">8.5h</span>
+                  <span className="font-semibold">
+                    {allMeetings.length > 0
+                      ? `${(allMeetings.reduce((sum, m) => {
+                          const mins = parseInt(m.duration) || 0;
+                          return sum + mins;
+                        }, 0) / 60).toFixed(1)}h`
+                      : "0h"}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-text-sec">Availability</span>
-                  <span className="font-semibold text-green">72%</span>
+                  <span className="text-text-sec">Meetings this week</span>
+                  <span className="font-semibold">
+                    {todayMeetings.length + tomorrowMeetings.length}
+                  </span>
                 </div>
               </div>
             </div>
@@ -630,7 +636,7 @@ export default function CalendarPage() {
                       const columnDateStr = `${columnDate.getFullYear()}-${String(columnDate.getMonth() + 1).padStart(2, "0")}-${String(columnDate.getDate()).padStart(2, "0")}`;
                       const blocked = isHourBlocked(columnDateStr, hour);
 
-                      // Show mock meetings on today and tomorrow
+                      // Show meetings on today and tomorrow
                       const meetings =
                         dayOffset === now.getDay() - 1
                           ? todayMeetings.filter(

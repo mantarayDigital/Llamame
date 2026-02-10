@@ -7,28 +7,18 @@ import {
   Check,
   X,
   Loader2,
-  ChevronDown,
   Link2,
   Unlink,
   Shield,
 } from "lucide-react";
-import type { CalendarProvider, SyncDirection } from "@/lib/calendar/types";
-import { btn, card, badge, toggle, input } from "@/lib/theme";
+import type { CalendarProvider } from "@/lib/calendar/types";
+import { btn, card, badge } from "@/lib/theme";
+import { useCurrentUserId, useIntegrations } from "@/lib/data";
 
 // ─── Types ──────────────────────────────────────────────────────
 
 interface CalendarSyncProps {
   className?: string;
-}
-
-interface DemoConnection {
-  id: string;
-  provider: CalendarProvider;
-  email: string;
-  syncDirection: SyncDirection;
-  selectedCalendars: string[];
-  lastSyncAt: number | null;
-  syncStatus: "idle" | "syncing" | "error";
 }
 
 interface SyncResultSummary {
@@ -49,8 +39,7 @@ const PROVIDER_CONFIG: Record<
     description: string;
     color: string;
     letter: string;
-    email: string;
-    calendars: string[];
+    convexProvider: string;
   }
 > = {
   google: {
@@ -58,23 +47,15 @@ const PROVIDER_CONFIG: Record<
     description: "Sync events with your Google account",
     color: "bg-blue-500",
     letter: "G",
-    email: "hello@mantaray.digital",
-    calendars: ["Primary", "Work", "Personal"],
+    convexProvider: "google_calendar",
   },
   microsoft: {
     name: "Microsoft Outlook",
     description: "Sync events with your Outlook account",
     color: "bg-sky-600",
     letter: "M",
-    email: "hello@mantaray.digital",
-    calendars: ["Calendar", "Meetings", "Personal"],
+    convexProvider: "outlook",
   },
-};
-
-const SYNC_DIRECTION_LABELS: Record<SyncDirection, string> = {
-  both: "Both ways",
-  from_external: "From external only",
-  to_external: "To external only",
 };
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -93,138 +74,108 @@ function timeAgo(timestamp: number): string {
 // ─── Component ──────────────────────────────────────────────────
 
 export default function CalendarSync({ className }: CalendarSyncProps) {
-  const [connections, setConnections] = useState<DemoConnection[]>([]);
+  const currentUserId = useCurrentUserId();
+  const integrations = useIntegrations(currentUserId);
   const [connecting, setConnecting] = useState<CalendarProvider | null>(null);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState<string | null>(null);
   const [syncResults, setSyncResults] = useState<SyncResultSummary[]>([]);
 
-  // ── Connect handler ─────────────────────────────────────────
+  // ── Connect handler — initiates OAuth flow ────────────────────
 
-  const handleConnect = useCallback((provider: CalendarProvider) => {
-    setConnecting(provider);
-
-    setTimeout(() => {
-      const config = PROVIDER_CONFIG[provider];
-      const newConnection: DemoConnection = {
-        id: `${provider}-${Date.now()}`,
-        provider,
-        email: config.email,
-        syncDirection: "both",
-        selectedCalendars: config.calendars.slice(0, 2),
-        lastSyncAt: Date.now(),
-        syncStatus: "idle",
-      };
-
-      setConnections((prev) => [...prev, newConnection]);
-      setSyncResults((prev) => [
-        ...prev,
-        {
-          provider,
-          eventsCreated: 12,
-          eventsUpdated: 3,
-          eventsDeleted: 0,
-          syncedAt: Date.now(),
-        },
-      ]);
-      setConnecting(null);
-    }, 1500);
-  }, []);
+  const handleConnect = useCallback(
+    async (provider: CalendarProvider) => {
+      if (!currentUserId) return;
+      setConnecting(provider);
+      try {
+        const res = await fetch("/api/calendar/connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, userId: currentUserId }),
+        });
+        const data = await res.json();
+        if (data.authUrl) {
+          window.location.href = data.authUrl;
+        } else {
+          console.error("No auth URL returned:", data);
+          setConnecting(null);
+        }
+      } catch (err) {
+        console.error("Connect error:", err);
+        setConnecting(null);
+      }
+    },
+    [currentUserId],
+  );
 
   // ── Disconnect handler ──────────────────────────────────────
 
-  const handleDisconnect = useCallback((connectionId: string) => {
-    setDisconnecting(connectionId);
-  }, []);
-
-  const confirmDisconnect = useCallback((connectionId: string) => {
-    setConnections((prev) => {
-      const removed = prev.find((c) => c.id === connectionId);
-      if (removed) {
-        setSyncResults((sr) =>
-          sr.filter((r) => r.provider !== removed.provider),
-        );
+  const confirmDisconnect = useCallback(
+    async (_integrationId: string, provider: CalendarProvider) => {
+      if (!currentUserId) return;
+      try {
+        await fetch("/api/calendar/disconnect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, userId: currentUserId }),
+        });
+      } catch (err) {
+        console.error("Disconnect error:", err);
       }
-      return prev.filter((c) => c.id !== connectionId);
-    });
-    setDisconnecting(null);
-  }, []);
+      setDisconnecting(null);
+    },
+    [currentUserId],
+  );
 
   // ── Sync Now handler ───────────────────────────────────────
 
-  const handleSyncNow = useCallback((connectionId: string) => {
-    setConnections((prev) =>
-      prev.map((c) =>
-        c.id === connectionId ? { ...c, syncStatus: "syncing" as const } : c,
-      ),
-    );
-
-    setTimeout(() => {
-      const now = Date.now();
-      setConnections((prev) =>
-        prev.map((c) =>
-          c.id === connectionId
-            ? { ...c, syncStatus: "idle" as const, lastSyncAt: now }
-            : c,
-        ),
-      );
-      setConnections((prev) => {
-        const conn = prev.find((c) => c.id === connectionId);
-        if (conn) {
-          setSyncResults((sr) => {
-            const filtered = sr.filter((r) => r.provider !== conn.provider);
+  const handleSyncNow = useCallback(
+    async (provider: CalendarProvider) => {
+      if (!currentUserId) return;
+      setSyncing(provider);
+      try {
+        const res = await fetch("/api/calendar/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ provider, userId: currentUserId }),
+        });
+        const data = await res.json();
+        if (data.success && data.result) {
+          setSyncResults((prev) => {
+            const filtered = prev.filter((r) => r.provider !== provider);
             return [
               ...filtered,
               {
-                provider: conn.provider,
-                eventsCreated: Math.floor(Math.random() * 5),
-                eventsUpdated: Math.floor(Math.random() * 8) + 1,
-                eventsDeleted: Math.floor(Math.random() * 2),
-                syncedAt: now,
+                provider,
+                eventsCreated: data.result.eventsCreated,
+                eventsUpdated: data.result.eventsUpdated,
+                eventsDeleted: data.result.eventsDeleted,
+                syncedAt: data.result.syncedAt,
               },
             ];
           });
         }
-        return prev;
-      });
-    }, 2000);
-  }, []);
-
-  // ── Update sync direction ──────────────────────────────────
-
-  const handleSyncDirectionChange = useCallback(
-    (connectionId: string, direction: SyncDirection) => {
-      setConnections((prev) =>
-        prev.map((c) =>
-          c.id === connectionId ? { ...c, syncDirection: direction } : c,
-        ),
-      );
+      } catch (err) {
+        console.error("Sync error:", err);
+      } finally {
+        setSyncing(null);
+      }
     },
-    [],
-  );
-
-  // ── Toggle calendar selection ──────────────────────────────
-
-  const handleCalendarToggle = useCallback(
-    (connectionId: string, calendarName: string) => {
-      setConnections((prev) =>
-        prev.map((c) => {
-          if (c.id !== connectionId) return c;
-          const selected = c.selectedCalendars.includes(calendarName)
-            ? c.selectedCalendars.filter((cal) => cal !== calendarName)
-            : [...c.selectedCalendars, calendarName];
-          return { ...c, selectedCalendars: selected };
-        }),
-      );
-    },
-    [],
+    [currentUserId],
   );
 
   // ── Derived state ──────────────────────────────────────────
 
-  const getConnection = (provider: CalendarProvider) =>
-    connections.find((c) => c.provider === provider);
+  const getConnection = (provider: CalendarProvider) => {
+    const convexProvider = PROVIDER_CONFIG[provider].convexProvider;
+    return integrations.find(
+      (i: any) => i.provider === convexProvider && i.status === "connected",
+    );
+  };
 
-  const hasAnyConnection = connections.length > 0;
+  const hasAnyConnection = integrations.some(
+    (i: any) => i.status === "connected" && (i.provider === "google_calendar" || i.provider === "outlook"),
+  );
 
   // ── Render ─────────────────────────────────────────────────
 
@@ -248,7 +199,9 @@ export default function CalendarSync({ className }: CalendarSyncProps) {
           const connection = getConnection(provider);
           const isConnecting = connecting === provider;
           const isDisconnecting =
-            connection && disconnecting === connection.id;
+            connection && disconnecting === connection._id;
+          const isSyncing = syncing === provider;
+          const connConfig = connection?.config as any;
 
           return (
             <div key={provider} className={`${card.base} p-5`}>
@@ -303,7 +256,7 @@ export default function CalendarSync({ className }: CalendarSyncProps) {
               {isConnecting && (
                 <div className="flex items-center justify-center gap-2 py-3 text-text-sec text-sm">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Connecting...
+                  Redirecting to {config.name}...
                 </div>
               )}
 
@@ -313,77 +266,37 @@ export default function CalendarSync({ className }: CalendarSyncProps) {
                   {/* Email */}
                   <div className="flex items-center gap-2 text-sm">
                     <Shield className="w-4 h-4 text-text-muted" />
-                    <span className="text-text-sec">{connection.email}</span>
+                    <span className="text-text-sec">
+                      {connConfig?.email ?? "Connected"}
+                    </span>
                   </div>
 
-                  {/* Sync direction */}
-                  <div>
-                    <label className="block text-xs font-medium text-text-muted mb-1.5">
-                      Sync direction
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={connection.syncDirection}
-                        onChange={(e) =>
-                          handleSyncDirectionChange(
-                            connection.id,
-                            e.target.value as SyncDirection,
-                          )
-                        }
-                        className={`${input.select} pr-10 appearance-none text-sm py-2`}
-                      >
-                        {(
-                          Object.entries(SYNC_DIRECTION_LABELS) as [
-                            SyncDirection,
-                            string,
-                          ][]
-                        ).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* Calendar selection */}
-                  <div>
-                    <label className="block text-xs font-medium text-text-muted mb-2">
-                      Calendars to sync
-                    </label>
-                    <div className="space-y-2">
-                      {config.calendars.map((calName) => {
-                        const isSelected =
-                          connection.selectedCalendars.includes(calName);
-                        return (
-                          <label
-                            key={calName}
-                            className="flex items-center gap-2.5 cursor-pointer group"
-                          >
-                            <button
-                              type="button"
-                              role="checkbox"
-                              aria-checked={isSelected}
-                              onClick={() =>
-                                handleCalendarToggle(connection.id, calName)
-                              }
-                              className={`w-4 h-4 rounded border flex items-center justify-center transition ${
-                                isSelected
-                                  ? "bg-accent border-accent"
-                                  : "border-border bg-white/[0.03] group-hover:border-border-hover"
-                              }`}
+                  {/* Calendars */}
+                  {connConfig?.calendars && (
+                    <div>
+                      <label className="block text-xs font-medium text-text-muted mb-2">
+                        Synced calendars
+                      </label>
+                      <div className="space-y-1.5">
+                        {(connConfig.calendars as any[])
+                          .filter((c: any) => c.selected)
+                          .map((cal: any) => (
+                            <div
+                              key={cal.id}
+                              className="flex items-center gap-2 text-sm text-text-sec"
                             >
-                              {isSelected && (
-                                <Check className="w-3 h-3 text-bg" />
+                              <Check className="w-3 h-3 text-green" />
+                              {cal.name}
+                              {cal.primary && (
+                                <span className="text-[0.6rem] px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium">
+                                  Primary
+                                </span>
                               )}
-                            </button>
-                            <span className="text-sm text-text">{calName}</span>
-                          </label>
-                        );
-                      })}
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Last sync */}
                   <div className="flex items-center gap-1.5 text-xs text-text-muted">
@@ -397,11 +310,11 @@ export default function CalendarSync({ className }: CalendarSyncProps) {
                   {/* Action buttons */}
                   <div className="flex gap-2 pt-1">
                     <button
-                      onClick={() => handleSyncNow(connection.id)}
-                      disabled={connection.syncStatus === "syncing"}
+                      onClick={() => handleSyncNow(provider)}
+                      disabled={isSyncing}
                       className={`${btn.ghost} flex-1 text-sm py-2 disabled:opacity-50`}
                     >
-                      {connection.syncStatus === "syncing" ? (
+                      {isSyncing ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Syncing...
@@ -416,7 +329,7 @@ export default function CalendarSync({ className }: CalendarSyncProps) {
 
                     {!isDisconnecting ? (
                       <button
-                        onClick={() => handleDisconnect(connection.id)}
+                        onClick={() => setDisconnecting(connection._id)}
                         className={`${btn.ghost} text-sm py-2 text-rose hover:text-rose border-rose/20 hover:border-rose/40 hover:bg-rose/5`}
                       >
                         <Unlink className="w-4 h-4" />
@@ -426,7 +339,9 @@ export default function CalendarSync({ className }: CalendarSyncProps) {
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-rose">Confirm?</span>
                         <button
-                          onClick={() => confirmDisconnect(connection.id)}
+                          onClick={() =>
+                            confirmDisconnect(connection._id, provider)
+                          }
                           className={`${btn.iconSm} text-rose border-rose/30 hover:bg-rose/10`}
                           aria-label="Confirm disconnect"
                         >
@@ -455,30 +370,15 @@ export default function CalendarSync({ className }: CalendarSyncProps) {
           <RefreshCw className="w-4 h-4 text-text-muted" />
           <h3 className="text-sm font-semibold text-text">Sync Status</h3>
 
-          {/* Overall health indicator */}
           {hasAnyConnection && (
             <span className="ml-auto flex items-center gap-1.5">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  connections.some((c) => c.syncStatus === "error")
-                    ? "bg-rose"
-                    : connections.some((c) => c.syncStatus === "syncing")
-                      ? "bg-amber animate-pulse"
-                      : "bg-green"
-                }`}
-              />
-              <span className="text-xs text-text-muted">
-                {connections.some((c) => c.syncStatus === "error")
-                  ? "Sync error"
-                  : connections.some((c) => c.syncStatus === "syncing")
-                    ? "Syncing..."
-                    : "All healthy"}
-              </span>
+              <span className="w-2 h-2 rounded-full bg-green" />
+              <span className="text-xs text-text-muted">Connected</span>
             </span>
           )}
         </div>
 
-        {!hasAnyConnection ? (
+        {!hasAnyConnection && syncResults.length === 0 ? (
           <p className="text-text-muted text-sm text-center py-6">
             No calendars connected. Connect a calendar above to start syncing.
           </p>

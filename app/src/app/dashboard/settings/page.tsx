@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   User,
   Plug,
@@ -20,6 +21,9 @@ import {
   Send,
   AlertTriangle,
   X,
+  Loader2,
+  Calendar,
+  Unlink,
   type LucideIcon,
 } from "lucide-react";
 import { appConfig, defaults, timezones } from "@/lib/config";
@@ -27,10 +31,19 @@ import { btn, input as inputStyles, toggle, card, badge } from "@/lib/theme";
 import { settingsTabs } from "@/lib/navigation";
 import { integrations, type IntegrationCategory } from "@/lib/integrations";
 import {
-  demoUser,
-  demoEnergyBlocks,
-  demoNotificationPrefs,
-  demoConnectedIntegrations,
+  useCurrentUser,
+  useCurrentUserId,
+  useApiKeys,
+  useWebhooks,
+  useIntegrations,
+  useUpdateProfile,
+  useUpdateBranding,
+  useUpdateNotificationPrefs,
+  useUpdateEnergyProfile,
+  useCreateApiKey,
+  useRevokeApiKey,
+  useCreateWebhook,
+  useRemoveWebhook,
 } from "@/lib/data";
 
 /* ─── Icon Map ───────────────────────────────────────────────── */
@@ -45,41 +58,9 @@ const iconMap: Record<string, LucideIcon> = {
   Code,
 };
 
-/* ─── Team / API Demo Data ───────────────────────────────────── */
+/* ─── Team Types ─────────────────────────────────────────────── */
 
 type TeamRole = "owner" | "admin" | "member" | "viewer";
-
-const demoTeamMembers: {
-  id: string;
-  name: string;
-  email: string;
-  role: TeamRole;
-  initials: string;
-  gradient: string;
-  joinedAt: string;
-}[] = [
-  { id: "tm_001", name: "Alex Rivera", email: "alex@mantaray.digital", role: "owner", initials: "AR", gradient: "from-accent to-violet", joinedAt: "Jan 2026" },
-  { id: "tm_002", name: "Priya Patel", email: "priya@mantaray.digital", role: "admin", initials: "PP", gradient: "from-violet to-rose", joinedAt: "Jan 2026" },
-  { id: "tm_003", name: "Marcus Chen", email: "marcus@mantaray.digital", role: "member", initials: "MC", gradient: "from-green to-accent", joinedAt: "Feb 2026" },
-];
-
-const demoPendingInvites: {
-  id: string;
-  email: string;
-  role: TeamRole;
-  sentAt: string;
-}[] = [
-  { id: "inv_001", email: "sarah@mantaray.digital", role: "member", sentAt: "2 days ago" },
-];
-
-const demoApiKeys = [
-  { id: "key_001", name: "Production", prefix: "llm_sk_7f3a", createdAt: "Jan 15, 2026", lastUsed: "2 hours ago" },
-  { id: "key_002", name: "Development", prefix: "llm_sk_test", createdAt: "Feb 1, 2026", lastUsed: "Never" },
-];
-
-const demoWebhooks = [
-  { id: "wh_001", url: "https://api.example.com/webhooks/llamame", events: ["booking.created", "booking.cancelled"], isActive: true, failureCount: 0, lastDelivery: "1 hour ago" },
-];
 
 /* ─── Constants ──────────────────────────────────────────────── */
 
@@ -176,59 +157,102 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 /* ─── Page Component ─────────────────────────────────────────── */
 
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SettingsContent />
+    </Suspense>
+  );
+}
+
+function SettingsContent() {
+  /* ── Convex Data ── */
+  const currentUserId = useCurrentUserId();
+  const user = useCurrentUser();
+  const apiKeyDocs = useApiKeys(currentUserId);
+  const webhookDocs = useWebhooks(currentUserId);
+  const userIntegrations = useIntegrations(currentUserId);
+  const searchParams = useSearchParams();
+  const updateProfileMut = useUpdateProfile();
+  const updateBrandingMut = useUpdateBranding();
+  const updateNotifPrefsMut = useUpdateNotificationPrefs();
+  const updateEnergyMut = useUpdateEnergyProfile();
+  const createApiKeyMut = useCreateApiKey();
+  const revokeApiKeyMut = useRevokeApiKey();
+  const createWebhookMut = useCreateWebhook();
+  const removeWebhookMut = useRemoveWebhook();
+
+  /* ── Derived data from Convex ── */
+  const defaultNotifPrefs = { emailConfirmations: true, emailReminders: true, whatsappReminders: false, slackNotifications: false, dailyDigest: false, reminderHoursBefore: [24, 1] as number[] };
+  const notifPrefsSource = user?.notificationPrefs ?? defaultNotifPrefs;
+
+  const energyBlocksComputed = [
+    { label: `Peak (${(user as any)?.energyProfile?.peakStart ?? "09:00"}-${(user as any)?.energyProfile?.peakEnd ?? "11:00"})`, level: 90, color: "bg-green" },
+    { label: "Midday", level: 70, color: "bg-accent" },
+    { label: "Afternoon", level: 50, color: "bg-amber" },
+    { label: `Low (${(user as any)?.energyProfile?.lowStart ?? "16:00"}-${(user as any)?.energyProfile?.lowEnd ?? "18:00"})`, level: 30, color: "bg-rose" },
+  ];
+
+  const apiKeyRows = apiKeyDocs.map((k: any) => ({
+    id: k._id,
+    name: k.name,
+    prefix: k.keyPrefix,
+    createdAt: new Date(k.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    lastUsed: "—",
+  }));
+
+  const webhookRows = webhookDocs.map((w: any) => ({
+    id: w._id,
+    url: w.url,
+    events: w.events,
+    isActive: w.isActive,
+    failureCount: w.failureCount,
+    lastDelivery: "—",
+  }));
+
   const [activeTab, setActiveTab] = useState("profile");
 
   /* ── Profile ── */
   const [profile, setProfile] = useState({
-    name: demoUser.name,
-    handle: demoUser.handle,
-    email: demoUser.email,
-    timezone: demoUser.timezone,
-    bio: demoUser.branding?.bio ?? "",
+    name: user?.name ?? "",
+    handle: user?.handle ?? "",
+    email: user?.email ?? "",
+    timezone: user?.timezone ?? "America/New_York",
+    bio: user?.branding?.bio ?? "",
   });
   const [profileSaved, setProfileSaved] = useState(false);
   const [workingHours, setWorkingHours] = useState(
     weekDays.map((_, i) => ({ enabled: i < 5, start: "09:00", end: "17:00" })),
   );
 
-  /* ── Integrations ── */
-  const [connectedIntegrations, setConnectedIntegrations] = useState<string[]>([
-    ...demoConnectedIntegrations,
-  ]);
-
   /* ── Branding ── */
   const [accentColor, setAccentColor] = useState(
-    demoUser.branding?.accentColor ?? defaults.accentColors[0].value,
+    user?.branding?.accentColor ?? defaults.accentColors[0].value,
   );
   const [customCss, setCustomCss] = useState("");
   const [showPoweredBy, setShowPoweredBy] = useState(
-    demoUser.branding?.showPoweredBy ?? true,
+    user?.branding?.showPoweredBy ?? true,
   );
   const [brandingSaved, setBrandingSaved] = useState(false);
 
   /* ── AI & Energy ── */
   const [aiBriefs, setAiBriefs] = useState(true);
   const [energyBlocks, setEnergyBlocks] = useState(
-    demoEnergyBlocks.map((b) => ({ ...b })),
+    energyBlocksComputed.map((b) => ({ ...b })),
   );
   const [fatigueProtection, setFatigueProtection] = useState(true);
   const [maxMeetingsPerDay, setMaxMeetingsPerDay] = useState(8);
   const [minBreak, setMinBreak] = useState(15);
 
   /* ── Notifications ── */
-  const [notifPrefs, setNotifPrefs] = useState({ ...demoNotificationPrefs });
+  const [notifPrefs, setNotifPrefs] = useState({ ...notifPrefsSource });
   const [reminderTimings, setReminderTimings] = useState<number[]>([
-    ...demoNotificationPrefs.reminderHoursBefore,
+    ...(notifPrefsSource.reminderHoursBefore ?? [24, 1]),
   ]);
   const [notifSaved, setNotifSaved] = useState(false);
 
   /* ── Team ── */
-  const [teamMembers, setTeamMembers] = useState(
-    demoTeamMembers.map((m) => ({ ...m })),
-  );
-  const [pendingInvites, setPendingInvites] = useState(
-    demoPendingInvites.map((inv) => ({ ...inv })),
-  );
+  const teamMembers: { id: string; name: string; email: string; role: TeamRole; initials: string; gradient: string; joinedAt: string }[] = [];
+  const pendingInvites: { id: string; email: string; role: TeamRole; sentAt: string }[] = [];
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "member" | "viewer">("member");
@@ -239,8 +263,8 @@ export default function SettingsPage() {
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
 
   /* ── API ── */
-  const [apiKeys, setApiKeys] = useState(demoApiKeys.map((k) => ({ ...k })));
-  const [webhooks, setWebhooks] = useState(demoWebhooks.map((w) => ({ ...w })));
+  const [apiKeys, setApiKeys] = useState(apiKeyRows.map((k: any) => ({ ...k })));
+  const [webhooks, setWebhooks] = useState(webhookRows.map((w: any) => ({ ...w })));
   const [showNewKeyForm, setShowNewKeyForm] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyScopes, setNewKeyScopes] = useState<string[]>([]);
@@ -254,6 +278,54 @@ export default function SettingsPage() {
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [webhookTested, setWebhookTested] = useState<string | null>(null);
 
+  /* ── Google Calendar ── */
+  const [connectingGoogle, setConnectingGoogle] = useState(false);
+  const [disconnectingGoogle, setDisconnectingGoogle] = useState(false);
+  const googleIntegration = userIntegrations.find(
+    (i: any) => i.provider === "google_calendar" && i.status === "connected"
+  );
+  const justConnected = searchParams.get("connected") === "google_calendar";
+  const connectedEmail = searchParams.get("email");
+
+  const handleConnectGoogle = async () => {
+    if (!currentUserId) return;
+    setConnectingGoogle(true);
+    try {
+      const res = await fetch("/api/calendar/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "google", userId: currentUserId }),
+      });
+      const data = await res.json();
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        alert(data.error ?? "Failed to start Google connection");
+        setConnectingGoogle(false);
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+      setConnectingGoogle(false);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    if (!googleIntegration) return;
+    setDisconnectingGoogle(true);
+    try {
+      await fetch("/api/calendar/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ integrationId: googleIntegration._id }),
+      });
+      // Convex will update reactively
+    } catch {
+      alert("Failed to disconnect. Please try again.");
+    } finally {
+      setDisconnectingGoogle(false);
+    }
+  };
+
   /* ── Handlers ── */
 
   const flashSave = (setter: (v: boolean) => void) => {
@@ -265,12 +337,6 @@ export default function SettingsPage() {
     navigator.clipboard.writeText(text);
     setCopiedText(id);
     setTimeout(() => setCopiedText(null), 2000);
-  };
-
-  const toggleIntegration = (provider: string) => {
-    setConnectedIntegrations((prev) =>
-      prev.includes(provider) ? prev.filter((p) => p !== provider) : [...prev, provider],
-    );
   };
 
   const toggleNotif = (key: NotifKey) => {
@@ -357,31 +423,27 @@ export default function SettingsPage() {
 
   const handleSendInvite = () => {
     if (!inviteEmail.trim()) return;
-    setPendingInvites((prev) => [
-      ...prev,
-      { id: `inv_${Date.now()}`, email: inviteEmail, role: inviteRole, sentAt: "Just now" },
-    ]);
+    // TODO: wire to team invite mutation when team features are built
     setInviteEmail("");
     setInviteRole("member");
     setShowInviteForm(false);
   };
 
-  const removeMember = (id: string) => {
-    setTeamMembers((prev) => prev.filter((m) => m.id !== id));
+  const removeMember = (_id: string) => {
+    // TODO: wire to team member removal mutation
     setRemovingMemberId(null);
   };
 
-  const revokeInvite = (id: string) => {
-    setPendingInvites((prev) => prev.filter((inv) => inv.id !== id));
+  const revokeInvite = (_id: string) => {
+    // TODO: wire to invite revoke mutation
   };
 
-  const updateMemberRole = (id: string, role: TeamRole) => {
-    setTeamMembers((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, role } : m)),
-    );
+  const updateMemberRole = (_id: string, _role: TeamRole) => {
+    // TODO: wire to team role update mutation
   };
 
-  const isTeamPlan = demoUser.plan === "team" || demoUser.plan === "enterprise";
+  const userPlan = user?.plan ?? "free";
+  const isTeamPlan = userPlan === "team" || userPlan === "enterprise";
 
   /* ─────────────────────────── JSX ──────────────────────────── */
 
@@ -551,7 +613,99 @@ export default function SettingsPage() {
       {/* ═══════════════════ INTEGRATIONS ═══════════════════ */}
       {activeTab === "integrations" && (
         <div className="max-w-2xl space-y-8">
-          {categoryOrder.map((cat) => {
+          {/* Success banner after connecting */}
+          {justConnected && (
+            <div className="p-4 rounded-xl bg-green-muted border border-green/20 flex items-center gap-3">
+              <Check className="w-5 h-5 text-green shrink-0" />
+              <div className="flex-1">
+                <strong className="text-sm block">Google Calendar connected!</strong>
+                <p className="text-sm text-text-sec">
+                  {connectedEmail ? `Syncing with ${connectedEmail}.` : "Your calendar is now syncing."} You can manage sync settings on the Calendar page.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Google Calendar — live integration */}
+          <div>
+            <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">
+              Calendar
+            </h3>
+            <div className="space-y-3">
+              {/* Google Calendar */}
+              <div className={`${card.base} p-4 flex items-center gap-4`}>
+                <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-border flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-accent" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold">Google Calendar</span>
+                    {googleIntegration && (
+                      <span className={`px-2 py-0.5 rounded-full text-[0.68rem] font-semibold ${badge.green}`}>
+                        Connected
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-text-muted truncate">
+                    {googleIntegration
+                      ? `Syncing with ${(googleIntegration as any).config?.email ?? "your Google account"}`
+                      : "Two-way calendar sync. Block time, detect conflicts, auto-update availability."}
+                  </div>
+                </div>
+                {googleIntegration ? (
+                  <button
+                    onClick={handleDisconnectGoogle}
+                    disabled={disconnectingGoogle}
+                    className={`${btn.ghost} text-rose hover:text-rose shrink-0`}
+                  >
+                    {disconnectingGoogle ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Unlink className="w-4 h-4" />
+                    )}
+                    Disconnect
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleConnectGoogle}
+                    disabled={connectingGoogle}
+                    className={`${btn.primary} shrink-0`}
+                  >
+                    {connectingGoogle ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Plug className="w-4 h-4" />
+                        Connect
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Outlook — Coming Soon */}
+              <div className={`${card.base} p-4 flex items-center gap-4 opacity-60`}>
+                <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-border flex items-center justify-center text-text-sec">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold">Outlook</span>
+                  <div className="text-xs text-text-muted truncate">
+                    Sync with Microsoft Outlook calendar and email. Two-way availability.
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[0.68rem] font-semibold bg-white/[0.06] text-text-muted shrink-0">
+                  Coming Soon
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Other integrations — Coming Soon */}
+          {categoryOrder.filter((c) => c !== "calendar").map((cat) => {
             const catIntegrations = integrations.filter((i) => i.category === cat);
             if (catIntegrations.length === 0) return null;
             return (
@@ -560,54 +714,27 @@ export default function SettingsPage() {
                   {categoryLabels[cat]}
                 </h3>
                 <div className="space-y-3">
-                  {catIntegrations.map((intg) => {
-                    const isConnected = connectedIntegrations.includes(intg.provider);
-                    return (
-                      <div
-                        key={intg.provider}
-                        className={`${card.base} p-4 flex items-center gap-4`}
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-border flex items-center justify-center text-text-sec">
-                          <Plug className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold">{intg.name}</span>
-                            <span
-                              className={`w-2 h-2 rounded-full ${
-                                isConnected ? "bg-green" : "bg-text-muted/40"
-                              }`}
-                            />
-                          </div>
-                          <div className="text-xs text-text-muted truncate">
-                            {intg.description}
-                          </div>
-                        </div>
-                        {isConnected ? (
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span
-                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.green}`}
-                            >
-                              <Check className="w-3 h-3" /> Connected
-                            </span>
-                            <button
-                              onClick={() => toggleIntegration(intg.provider)}
-                              className="text-xs text-text-muted hover:text-rose transition"
-                            >
-                              Disconnect
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => toggleIntegration(intg.provider)}
-                            className={btn.ghost}
-                          >
-                            Connect
-                          </button>
-                        )}
+                  {catIntegrations.map((intg) => (
+                    <div
+                      key={intg.provider}
+                      className={`${card.base} p-4 flex items-center gap-4 opacity-60`}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-border flex items-center justify-center text-text-sec">
+                        <Plug className="w-5 h-5" />
                       </div>
-                    );
-                  })}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold">{intg.name}</span>
+                        </div>
+                        <div className="text-xs text-text-muted truncate">
+                          {intg.description}
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[0.68rem] font-semibold bg-white/[0.06] text-text-muted shrink-0">
+                        Coming Soon
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
@@ -1498,7 +1625,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2 pl-8">
-                    {wh.events.map((evt) => (
+                    {wh.events.map((evt: string) => (
                       <span
                         key={evt}
                         className={`px-2 py-0.5 rounded-full text-xs font-mono ${badge.accent}`}

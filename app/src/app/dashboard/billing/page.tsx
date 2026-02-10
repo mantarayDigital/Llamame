@@ -6,18 +6,14 @@ import {
   CreditCard,
   Check,
   ArrowUpRight,
-  ExternalLink,
   Zap,
   Shield,
   Sparkles,
 } from "lucide-react";
 import { plans, getPlan } from "@/lib/plans";
 import type { PlanTier } from "@/lib/types";
-import { demoUser } from "@/lib/data";
+import { useCurrentUser, useCurrentUserId, useEventTypes } from "@/lib/data";
 import { btn, card, badge, currencyFormatter } from "@/lib/theme";
-
-/** Current user plan — in production, from auth/Convex */
-const currentPlan = getPlan(demoUser.plan as PlanTier);
 
 /** Plans available for upgrade via Creem checkout */
 const upgradePlans = plans.filter(
@@ -33,6 +29,12 @@ export default function BillingPage() {
 }
 
 function BillingContent() {
+  const currentUserId = useCurrentUserId();
+  const user = useCurrentUser();
+  const eventTypes = useEventTypes(currentUserId);
+
+  const currentPlan = getPlan((user?.plan ?? "free") as PlanTier);
+
   const searchParams = useSearchParams();
   const justPurchased = searchParams.get("success") === "true";
 
@@ -47,8 +49,8 @@ function BillingContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan,
-          email: demoUser.email,
-          userId: demoUser.id,
+          email: user?.email ?? "",
+          userId: currentUserId,
         }),
       });
       const data = await res.json();
@@ -64,29 +66,6 @@ function BillingContent() {
     }
   };
 
-  /** Open Creem customer portal (manage subscription) */
-  const handleManage = async () => {
-    setLoading("portal");
-    try {
-      const res = await fetch("/api/billing/portal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerId: "demo_customer_id", // TODO: from auth/Convex
-        }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error ?? "Could not open portal");
-      }
-    } catch {
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setLoading(null);
-    }
-  };
 
   return (
     <>
@@ -111,14 +90,9 @@ function BillingContent() {
           </p>
         </div>
         {currentPlan.tier !== "free" && (
-          <button
-            onClick={handleManage}
-            disabled={loading === "portal"}
-            className={btn.ghost}
-          >
-            <ExternalLink className="w-4 h-4" />
-            {loading === "portal" ? "Opening..." : "Manage Subscription"}
-          </button>
+          <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
+            Subscription management coming soon
+          </span>
         )}
       </div>
 
@@ -159,7 +133,7 @@ function BillingContent() {
                   </span>
                 </div>
                 <p className="text-xs text-text-muted">
-                  Next billing: Mar 6, 2026
+                  Billed monthly
                 </p>
               </>
             ) : (
@@ -258,17 +232,17 @@ function BillingContent() {
         <div className="space-y-4">
           <UsageRow
             label="Event Types"
-            used={4}
+            used={eventTypes.length}
             limit={currentPlan.limits.maxEventTypes || Infinity}
           />
           <UsageRow
             label="Bookings This Month"
-            used={18}
+            used={0}
             limit={currentPlan.limits.maxBookingsPerMonth || Infinity}
           />
           <UsageRow
             label="Workflows"
-            used={5}
+            used={0}
             limit={currentPlan.limits.maxWorkflows || Infinity}
           />
           <UsageRow
@@ -306,32 +280,9 @@ function BillingContent() {
               No payments yet. Upgrade to see your billing history.
             </p>
           ) : (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between py-2 border-b border-border">
-                <div>
-                  <div className="text-sm font-medium">Pro Plan — Monthly</div>
-                  <div className="text-xs text-text-muted">Feb 6, 2026</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">$12.00</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-semibold ${badge.green}`}>
-                    Paid
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <div className="text-sm font-medium">Pro Plan — Monthly</div>
-                  <div className="text-xs text-text-muted">Jan 6, 2026</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">$12.00</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-semibold ${badge.green}`}>
-                    Paid
-                  </span>
-                </div>
-              </div>
-            </div>
+            <p className="text-sm text-text-muted">
+              Payment history will appear here once billing is active.
+            </p>
           )}
         </div>
       </div>

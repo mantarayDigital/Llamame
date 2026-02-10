@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 
 /**
  * Llamame SaaS database schema.
@@ -106,17 +107,22 @@ const workflowAction = v.union(
 // ─── Schema ──────────────────────────────────────────────────────
 
 export default defineSchema({
+  ...authTables,
+
   // ── Identity & Access ──────────────────────────────────────────
 
   users: defineTable({
     // Auth provider external ID (Clerk, Auth0, etc.)
     externalId: v.optional(v.string()),
-    name: v.string(),
-    email: v.string(),
-    handle: v.string(),
+    // name/email/handle/timezone/plan are optional at creation time because
+    // @convex-dev/auth creates the initial user doc with just email+name.
+    // getOrCreateFromAuth fills in the rest on first login.
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    handle: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
-    timezone: v.string(),
-    plan: planTier,
+    timezone: v.optional(v.string()),
+    plan: v.optional(planTier),
     orgId: v.optional(v.id("organizations")),
     role: v.optional(orgRole),
     energyProfile: v.optional(
@@ -148,7 +154,7 @@ export default defineSchema({
     ),
     onboardingCompleted: v.optional(v.boolean()),
     lastLoginAt: v.optional(v.number()),
-    createdAt: v.number(),
+    createdAt: v.optional(v.number()),
   })
     .index("by_email", ["email"])
     .index("by_handle", ["handle"])

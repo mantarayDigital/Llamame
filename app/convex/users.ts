@@ -1,7 +1,17 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 // ─── Queries ────────────────────────────────────────────────────
+
+export const getMe = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    return ctx.db.get(userId);
+  },
+});
 
 export const getByHandle = query({
   args: { handle: v.string() },
@@ -149,5 +159,59 @@ export const completeOnboarding = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
     await ctx.db.patch(userId, { onboardingCompleted: true });
+  },
+});
+
+export const getOrCreateFromAuth = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // The auth library creates a user doc in the users table automatically.
+    // We just need to ensure our app-specific fields are set.
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("Auth user not found");
+
+    // If the user already has a handle, they've been set up — just update lastLoginAt.
+    if (user.handle) {
+      await ctx.db.patch(userId, { lastLoginAt: Date.now() });
+      return userId;
+    }
+
+    // New user: generate a handle from their email or name.
+    const email = user.email ?? "";
+    const name = user.name ?? email.split("@")[0] ?? "user";
+    let baseHandle = (email.split("@")[0] ?? "user")
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "")
+      .slice(0, 30);
+    if (!baseHandle) baseHandle = "user";
+
+    // Ensure handle uniqueness
+    let handle = baseHandle;
+    let suffix = 1;
+    while (true) {
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_handle", (q) => q.eq("handle", handle))
+        .first();
+      if (!existing || existing._id === userId) break;
+      handle = `${baseHandle}-${suffix}`;
+      suffix++;
+    }
+
+    await ctx.db.patch(userId, {
+      name,
+      email,
+      handle,
+      timezone: "America/New_York",
+      plan: "free",
+      onboardingCompleted: false,
+      lastLoginAt: Date.now(),
+      createdAt: Date.now(),
+    });
+
+    return userId;
   },
 });

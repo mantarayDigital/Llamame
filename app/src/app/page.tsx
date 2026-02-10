@@ -38,7 +38,7 @@ import {
 import { appConfig } from "@/lib/config";
 import { plans } from "@/lib/plans";
 import { integrations } from "@/lib/integrations";
-import { demoTestimonials, demoLandingStats } from "@/lib/demo-data";
+import { demoTestimonials, demoLandingStats } from "@/lib/marketing-content";
 import { marketingNav, footerNav } from "@/lib/navigation";
 import { CONTAINER, btn } from "@/lib/theme";
 
@@ -205,13 +205,13 @@ export default function LandingPage() {
               </Link>
             ))}
             <Link
-              href="/dashboard"
+              href="/auth/login"
               className="px-3.5 py-1.5 rounded-md text-sm font-medium text-text-sec hover:text-text hover:bg-white/[0.03] transition"
             >
               Sign in
             </Link>
             <Link
-              href="/booking"
+              href="/auth/signup"
               className={btn.primary}
             >
               <ArrowRight className="w-3.5 h-3.5" /> Get started
@@ -244,7 +244,7 @@ export default function LandingPage() {
 
         <div className="flex gap-2.5 justify-center mb-5">
           <Link
-            href="/booking"
+            href="/auth/signup"
             className={btn.primary}
           >
             <ArrowRight className="w-3.5 h-3.5" /> Start free
@@ -788,7 +788,7 @@ export default function LandingPage() {
             </p>
             <div className="relative z-[1] flex gap-2.5 justify-center">
               <Link
-                href="/booking"
+                href="/auth/signup"
                 className={btn.primary}
               >
                 <ArrowRight className="w-3.5 h-3.5" /> Start free

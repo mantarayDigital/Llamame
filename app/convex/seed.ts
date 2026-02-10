@@ -305,6 +305,93 @@ export const run = mutation({
       });
     }
 
+    // ── Seed additional tables ────────────────────────────────────
+    const hasAudit = await ctx.db.query("auditLog").first();
+    if (!hasAudit) {
+      // Audit log entries
+      const auditEntries = [
+        { action: "booking.created", resource: "bookings", resourceId: "booking_seed_1", metadata: { clientName: "Sarah Chen" } },
+        { action: "billing.payment_received", resource: "billing", resourceId: "pay_seed_1", metadata: { amount: 150, currency: "USD" } },
+        { action: "event_type.updated", resource: "eventTypes", resourceId: "evt_seed_1", metadata: { field: "duration", oldValue: 30, newValue: 45 } },
+        { action: "login", resource: "auth", resourceId: "session_seed_1", metadata: { method: "google" } },
+        { action: "settings.updated", resource: "settings", resourceId: "user_seed_1", metadata: { field: "timezone" } },
+        { action: "booking.cancelled", resource: "bookings", resourceId: "booking_seed_2", metadata: { clientName: "Alex Kim", reason: "Schedule conflict" } },
+        { action: "event_type.created", resource: "eventTypes", resourceId: "evt_seed_2", metadata: { title: "Workshop" } },
+        { action: "client.created", resource: "clients", resourceId: "cli_seed_1", metadata: { name: "Emily Watson" } },
+        { action: "workflow.activated", resource: "workflows", resourceId: "wf_seed_1", metadata: { name: "Booking Confirmation Email" } },
+        { action: "billing.plan_upgraded", resource: "billing", resourceId: "sub_seed_1", metadata: { from: "free", to: "pro" } },
+        { action: "booking.created", resource: "bookings", resourceId: "booking_seed_3", metadata: { clientName: "Lucas Sharma" } },
+        { action: "api_key.created", resource: "apiKeys", resourceId: "key_seed_1", metadata: { name: "Production" } },
+        { action: "webhook.created", resource: "webhookEndpoints", resourceId: "wh_seed_1", metadata: { url: "https://api.example.com/webhooks" } },
+        { action: "booking.completed", resource: "bookings", resourceId: "booking_seed_4", metadata: { clientName: "Ana Kovacs" } },
+        { action: "settings.updated", resource: "settings", resourceId: "user_seed_2", metadata: { field: "notificationPrefs" } },
+      ];
+      for (let i = 0; i < auditEntries.length; i++) {
+        await ctx.db.insert("auditLog", {
+          userId,
+          ...auditEntries[i],
+          ipAddress: "192.168.1.1",
+          createdAt: now - (auditEntries.length - i) * 3_600_000,
+        });
+      }
+
+      // Integration records
+      const integrationProviders = [
+        { provider: "google_calendar" as const, status: "connected" as const },
+        { provider: "google_meet" as const, status: "connected" as const },
+        { provider: "whatsapp" as const, status: "connected" as const },
+        { provider: "stripe" as const, status: "connected" as const },
+      ];
+      for (const integ of integrationProviders) {
+        await ctx.db.insert("integrations", {
+          userId,
+          provider: integ.provider,
+          status: integ.status,
+          createdAt: now - 86_400_000 * 30,
+        });
+      }
+
+      // API key records
+      await ctx.db.insert("apiKeys", {
+        userId,
+        name: "Production",
+        keyPrefix: "llm_sk_7f3a",
+        keyHash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+        scopes: ["bookings:read", "bookings:write", "events:read"],
+        createdAt: now - 86_400_000 * 15,
+      });
+      await ctx.db.insert("apiKeys", {
+        userId,
+        name: "Development",
+        keyPrefix: "llm_sk_test",
+        keyHash: "f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5",
+        scopes: ["bookings:read", "events:read"],
+        createdAt: now - 86_400_000 * 5,
+      });
+
+      // Webhook endpoint
+      await ctx.db.insert("webhookEndpoints", {
+        userId,
+        url: "https://api.example.com/webhooks/llamame",
+        events: ["booking.created", "booking.cancelled", "payment.received"],
+        secret: "whsec_demo_secret_key_12345",
+        isActive: true,
+        failureCount: 0,
+        createdAt: now - 86_400_000 * 10,
+      });
+
+      // Subscription record
+      await ctx.db.insert("subscriptions", {
+        userId,
+        plan: "pro",
+        status: "active",
+        billingInterval: "monthly",
+        currentPeriodStart: now - 86_400_000 * 6,
+        currentPeriodEnd: now + 86_400_000 * 24,
+        createdAt: now - 86_400_000 * 36,
+      });
+    }
+
     return { status: "seeded", userId };
   },
 });

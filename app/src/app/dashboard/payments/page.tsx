@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCurrentUserId, useBookingsWithPayments } from "@/lib/data";
 import {
   DollarSign,
   Download,
@@ -27,85 +28,6 @@ interface Payment {
   method: string;
 }
 
-const demoPayments: Payment[] = [
-  {
-    id: "pay_001",
-    clientName: "Sarah Chen",
-    clientEmail: "sarah@techflow.io",
-    eventType: "Strategy Session",
-    amount: 150,
-    currency: "USD",
-    status: "paid",
-    date: "Feb 6, 2026",
-    method: "Stripe",
-  },
-  {
-    id: "pay_002",
-    clientName: "Lucas Sharma",
-    clientEmail: "lucas@designco.com",
-    eventType: "Strategy Session",
-    amount: 150,
-    currency: "USD",
-    status: "paid",
-    date: "Feb 5, 2026",
-    method: "Stripe",
-  },
-  {
-    id: "pay_003",
-    clientName: "Ana Kovacs",
-    clientEmail: "ana@growthlab.com",
-    eventType: "Strategy Session",
-    amount: 150,
-    currency: "USD",
-    status: "paid",
-    date: "Feb 4, 2026",
-    method: "Stripe",
-  },
-  {
-    id: "pay_004",
-    clientName: "Emily Watson",
-    clientEmail: "emily@brandforge.co",
-    eventType: "Strategy Session",
-    amount: 150,
-    currency: "USD",
-    status: "pending",
-    date: "Feb 7, 2026",
-    method: "Stripe",
-  },
-  {
-    id: "pay_005",
-    clientName: "Alex Kim",
-    clientEmail: "alex@nexusai.com",
-    eventType: "Workshop",
-    amount: 500,
-    currency: "USD",
-    status: "refunded",
-    date: "Jan 28, 2026",
-    method: "Stripe",
-  },
-  {
-    id: "pay_006",
-    clientName: "Sarah Chen",
-    clientEmail: "sarah@techflow.io",
-    eventType: "Strategy Session",
-    amount: 150,
-    currency: "USD",
-    status: "paid",
-    date: "Jan 27, 2026",
-    method: "Stripe",
-  },
-  {
-    id: "pay_007",
-    clientName: "Ana Kovacs",
-    clientEmail: "ana@growthlab.com",
-    eventType: "Strategy Session",
-    amount: 150,
-    currency: "USD",
-    status: "paid",
-    date: "Jan 25, 2026",
-    method: "PayPal",
-  },
-];
 
 const statusConfig: Record<
   string,
@@ -135,10 +57,25 @@ const statusConfig: Record<
 
 
 export default function PaymentsPage() {
+  const currentUserId = useCurrentUserId();
+  const rawBookings = useBookingsWithPayments(currentUserId);
+
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
 
-  const filtered = demoPayments.filter((p) => {
+  const payments: Payment[] = rawBookings.map((b: any) => ({
+    id: b._id,
+    clientName: b.clientName,
+    clientEmail: b.clientEmail,
+    eventType: b.eventTypeTitle ?? "Unknown",
+    amount: b.paymentAmount ?? 0,
+    currency: b.paymentCurrency ?? "USD",
+    status: (b.paymentStatus ?? "pending") as Payment["status"],
+    date: new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    method: "Stripe",
+  }));
+
+  const filtered = payments.filter((p) => {
     const matchesFilter = filter === "all" || p.status === filter;
     const matchesSearch =
       search === "" ||
@@ -147,13 +84,13 @@ export default function PaymentsPage() {
     return matchesFilter && matchesSearch;
   });
 
-  const totalRevenue = demoPayments
+  const totalRevenue = payments
     .filter((p) => p.status === "paid")
     .reduce((sum, p) => sum + p.amount, 0);
-  const pendingRevenue = demoPayments
+  const pendingRevenue = payments
     .filter((p) => p.status === "pending")
     .reduce((sum, p) => sum + p.amount, 0);
-  const refundedAmount = demoPayments
+  const refundedAmount = payments
     .filter((p) => p.status === "refunded")
     .reduce((sum, p) => sum + p.amount, 0);
 
@@ -192,7 +129,7 @@ export default function PaymentsPage() {
             {currencyFormatter.format(pendingRevenue)}
           </div>
           <div className="text-xs text-text-muted mt-1">
-            {demoPayments.filter((p) => p.status === "pending").length}{" "}
+            {payments.filter((p) => p.status === "pending").length}{" "}
             transactions
           </div>
         </div>
@@ -204,7 +141,7 @@ export default function PaymentsPage() {
             {currencyFormatter.format(refundedAmount)}
           </div>
           <div className="text-xs text-text-muted mt-1">
-            {demoPayments.filter((p) => p.status === "refunded").length}{" "}
+            {payments.filter((p) => p.status === "refunded").length}{" "}
             transactions
           </div>
         </div>
@@ -216,7 +153,7 @@ export default function PaymentsPage() {
             {currencyFormatter.format(
               totalRevenue /
                 Math.max(
-                  demoPayments.filter((p) => p.status === "paid").length,
+                  payments.filter((p) => p.status === "paid").length,
                   1
                 )
             )}

@@ -33,7 +33,7 @@ const SCOPES = [
 const TOKEN_EXPIRY_BUFFER_MS = 60_000;
 
 function getRedirectUri(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").trim();
   return `${baseUrl}/api/auth/google/callback`;
 }
 

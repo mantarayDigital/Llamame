@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { Suspense, useState, useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   ArrowLeft,
@@ -17,20 +18,12 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { appConfig, timezones, vibeCheckMoods } from "@/lib/config";
-import { demoUser, demoEventTypes } from "@/lib/data";
+import { useUserByHandle, useEventTypeBySlug } from "@/lib/data";
 import { btn, input as inputStyles, locationLabels as locationLabelMap, currencyFormatter } from "@/lib/theme";
 import { generateSlots, getAvailableDates } from "@/lib/slots";
 import { getEnergyForTime, type EnergySlotInfo } from "@/lib/scheduling";
 import { analyzeVibeCheck, type VibeAnalysis } from "@/lib/ai";
 import RescheduleModal from "@/components/RescheduleModal";
-
-/** The event type used on this booking page (Strategy Session). */
-const eventType = demoEventTypes[1];
-
-const locationLabel = locationLabelMap[eventType.location] ?? eventType.location;
-
-const formattedPrice =
-  eventType.price ? currencyFormatter.format(eventType.price) : "Free";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -40,6 +33,23 @@ const MONTHS = [
 type Step = 1 | 2 | 3 | 4;
 
 export default function BookingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>}>
+      <BookingPageInner />
+    </Suspense>
+  );
+}
+
+function BookingPageInner() {
+  const searchParams = useSearchParams();
+  const handle = searchParams.get("handle") ?? "mantaray";
+  const slug = searchParams.get("slug") ?? "discovery-call";
+
+  const user = useUserByHandle(handle);
+  const eventType = useEventTypeBySlug(slug);
+
+  const locationLabel = eventType ? (locationLabelMap[eventType.location] ?? eventType.location) : "";
+  const formattedPrice = eventType?.price ? currencyFormatter.format(eventType.price) : "Free";
   const now = new Date();
   const [step, setStep] = useState<Step>(2);
   const [calYear, setCalYear] = useState(now.getFullYear());
@@ -55,6 +65,14 @@ export default function BookingPage() {
   });
   const [vibeAnalysis, setVibeAnalysis] = useState<VibeAnalysis | null>(null);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
+
+  if (!user || !eventType) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-text-muted">Loading...</div>
+      </div>
+    );
+  }
 
   // Generate available dates for the current month
   const availableDates = useMemo(
@@ -182,11 +200,11 @@ export default function BookingPage() {
             {/* Host Panel */}
             <div className="p-8 border-r border-border flex flex-col">
               <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-accent to-violet flex items-center justify-center text-3xl font-bold mb-4">
-                {demoUser.name.charAt(0)}
+                {(user.name ?? "").charAt(0)}
               </div>
-              <div className="text-xl font-bold mb-1">{demoUser.name}</div>
+              <div className="text-xl font-bold mb-1">{user.name ?? ""}</div>
               <div className="text-text-muted text-sm mb-6">
-                {appConfig.domain}/{demoUser.handle}
+                {appConfig.domain}/{user.handle}
               </div>
 
               <div className="p-4 rounded-lg border border-violet bg-violet-muted/50 mb-6">
@@ -478,7 +496,7 @@ export default function BookingPage() {
             </div>
             <h2 className="text-2xl font-bold mb-2">You&apos;re booked!</h2>
             <p className="text-text-sec mb-8">
-              {eventType.title} with {demoUser.name}
+              {eventType.title} with {user.name}
             </p>
             <div className="inline-flex flex-col gap-3 text-left bg-bg-card border border-border rounded-xl p-6 mb-8">
               <div className="flex items-center gap-3 text-sm">

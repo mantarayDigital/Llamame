@@ -20,9 +20,12 @@ import {
 } from "lucide-react";
 import {
   useEventTypes,
-  demoUser,
-  demoEventTypes,
-  isConvexConnected,
+  useCurrentUserId,
+  useCurrentUser,
+  useToggleEventType,
+  useDeleteEventType,
+  useCreateEventType,
+  useUpdateEventType,
 } from "@/lib/data";
 import type { EventType } from "@/lib/types";
 import { appConfig } from "@/lib/config";
@@ -36,92 +39,107 @@ import {
 import EventTypeModal from "@/components/EventTypeModal";
 
 export default function EventsPage() {
-  const rawEvents = useEventTypes(
-    isConvexConnected ? demoUser.id : undefined
-  ) as EventType[];
-  const [events, setEvents] = useState<EventType[]>(rawEvents);
+  const currentUserId = useCurrentUserId();
+  const rawEvents = useEventTypes(currentUserId) as unknown as EventType[];
+  const currentUser = useCurrentUser();
+  const toggleEventTypeMut = useToggleEventType();
+  const deleteEventTypeMut = useDeleteEventType();
+  const createEventTypeMut = useCreateEventType();
+  const updateEventTypeMut = useUpdateEventType();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventType | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
-  const displayEvents = events.length > 0 ? events : rawEvents;
-
-  const filtered = displayEvents.filter(
+  const filtered = rawEvents.filter(
     (e) =>
       search === "" ||
       e.title.toLowerCase().includes(search.toLowerCase()) ||
       e.slug.toLowerCase().includes(search.toLowerCase())
   );
 
-  const activeCount = displayEvents.filter((e) => e.isActive).length;
+  const activeCount = rawEvents.filter((e) => e.isActive).length;
 
-  const toggleActive = (id: string) => {
-    setEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, isActive: !e.isActive } : e))
-    );
+  const toggleActive = async (id: string) => {
+    try {
+      await toggleEventTypeMut({ id: id as any });
+    } catch (e) {
+      console.error("Failed to toggle event type:", e);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteEventTypeMut({ id: id as any });
+    } catch (e) {
+      console.error("Failed to delete event type:", e);
+    }
     setMenuOpenId(null);
   };
 
-  const handleDuplicate = (event: EventType) => {
-    const dup: EventType = {
-      ...event,
-      id: `evt_${Date.now()}`,
-      title: `${event.title} (Copy)`,
-      slug: `${event.slug}-copy`,
-      isActive: false,
-      createdAt: Date.now(),
-    };
-    setEvents((prev) => [...prev, dup]);
+  const handleDuplicate = async (event: EventType) => {
+    try {
+      await createEventTypeMut({
+        userId: currentUserId as any,
+        title: `${event.title} (Copy)`,
+        slug: `${event.slug}-copy-${Date.now()}`,
+        description: event.description,
+        duration: event.duration,
+        color: event.color,
+        location: event.location,
+        price: event.price,
+        currency: event.currency ?? "USD",
+        requiresVibeCheck: event.requiresVibeCheck,
+        requiresPayment: event.requiresPayment,
+        bufferBefore: event.bufferBefore,
+        bufferAfter: event.bufferAfter,
+        availability: event.availability,
+      });
+    } catch (e) {
+      console.error("Failed to duplicate event type:", e);
+    }
     setMenuOpenId(null);
   };
 
   const copyLink = (slug: string, id: string) => {
-    navigator.clipboard.writeText(`${appConfig.domain}/${demoUser.handle}/${slug}`);
+    navigator.clipboard.writeText(`${appConfig.domain}/${currentUser?.handle ?? ""}/${slug}`);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleSave = (data: Partial<EventType>) => {
-    if (editingEvent) {
-      setEvents((prev) =>
-        prev.map((e) => (e.id === editingEvent.id ? { ...e, ...data } : e))
-      );
-    } else {
-      const newEvent: EventType = {
-        id: `evt_${Date.now()}`,
-        userId: demoUser.id,
-        title: data.title ?? "New Event",
-        slug: data.slug ?? `event-${Date.now()}`,
-        description: data.description,
-        duration: data.duration ?? 30,
-        color: data.color ?? "accent",
-        location: data.location ?? "google_meet",
-        price: data.price,
-        currency: data.currency ?? "USD",
-        isActive: true,
-        requiresVibeCheck: data.requiresVibeCheck ?? true,
-        requiresPayment: data.requiresPayment ?? false,
-        bufferBefore: data.bufferBefore,
-        bufferAfter: data.bufferAfter,
-        minNotice: data.minNotice,
-        maxAdvance: data.maxAdvance,
-        maxPerDay: data.maxPerDay,
-        availability: data.availability,
-        dateOverrides: data.dateOverrides,
-        customFields: data.customFields,
-        recurrence: data.recurrence,
-        groupBooking: data.groupBooking,
-        redirectUrl: data.redirectUrl,
-        confirmationMessage: data.confirmationMessage,
-        createdAt: Date.now(),
-      };
-      setEvents((prev) => [...prev, newEvent]);
+  const handleSave = async (data: Partial<EventType>) => {
+    try {
+      if (editingEvent) {
+        await updateEventTypeMut({
+          id: (editingEvent as any)._id ?? editingEvent.id,
+          ...data,
+        } as any);
+      } else {
+        await createEventTypeMut({
+          userId: currentUserId as any,
+          title: data.title ?? "New Event",
+          slug: data.slug ?? `event-${Date.now()}`,
+          description: data.description,
+          duration: data.duration ?? 30,
+          color: data.color ?? "accent",
+          location: data.location ?? "google_meet",
+          price: data.price,
+          currency: data.currency ?? "USD",
+          requiresVibeCheck: data.requiresVibeCheck ?? true,
+          requiresPayment: data.requiresPayment ?? false,
+          bufferBefore: data.bufferBefore,
+          bufferAfter: data.bufferAfter,
+          availability: data.availability,
+          minNotice: data.minNotice,
+          maxAdvance: data.maxAdvance,
+          maxPerDay: data.maxPerDay,
+          redirectUrl: data.redirectUrl,
+          confirmationMessage: data.confirmationMessage,
+        } as any);
+      }
+    } catch (e) {
+      console.error("Failed to save event type:", e);
     }
     setModalOpen(false);
     setEditingEvent(null);
@@ -148,13 +166,13 @@ export default function EventsPage() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex gap-4 text-sm">
           <span className="text-text-sec">
-            <strong className="text-text">{displayEvents.length}</strong> event types
+            <strong className="text-text">{rawEvents.length}</strong> event types
           </span>
           <span className="text-text-sec">
             <strong className="text-green">{activeCount}</strong> active
           </span>
           <span className="text-text-sec">
-            <strong className="text-text-muted">{displayEvents.length - activeCount}</strong> inactive
+            <strong className="text-text-muted">{rawEvents.length - activeCount}</strong> inactive
           </span>
         </div>
         <div className="relative max-w-xs">
@@ -176,7 +194,7 @@ export default function EventsPage() {
           const locLabel = locationLabels[et.location] ?? et.location;
           return (
             <div
-              key={et.id}
+              key={(et as any)._id ?? et.id}
               className={`rounded-xl border bg-bg-card p-5 transition group ${
                 et.isActive ? "border-border hover:border-border-hover" : "border-border opacity-60"
               }`}
@@ -200,18 +218,18 @@ export default function EventsPage() {
                     )}
                   </div>
                   <p className="text-sm text-text-muted truncate">
-                    /{demoUser.handle}/{et.slug}
+                    /{currentUser?.handle ?? ""}/{et.slug}
                   </p>
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
-                    onClick={() => copyLink(et.slug, et.id)}
+                    onClick={() => copyLink(et.slug, (et as any)._id ?? et.id)}
                     className={btn.iconSm}
                     title="Copy link"
                   >
-                    {copiedId === et.id ? (
+                    {copiedId === ((et as any)._id ?? et.id) ? (
                       <span className="text-green text-xs">Done</span>
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
@@ -226,12 +244,12 @@ export default function EventsPage() {
                   </button>
                   <div className="relative">
                     <button
-                      onClick={() => setMenuOpenId(menuOpenId === et.id ? null : et.id)}
+                      onClick={() => setMenuOpenId(menuOpenId === ((et as any)._id ?? et.id) ? null : ((et as any)._id ?? et.id))}
                       className={btn.iconSm}
                     >
                       <MoreHorizontal className="w-3.5 h-3.5" />
                     </button>
-                    {menuOpenId === et.id && (
+                    {menuOpenId === ((et as any)._id ?? et.id) && (
                       <div className="absolute right-0 top-full mt-1 w-40 rounded-lg border border-border bg-bg-card shadow-card z-30">
                         <button
                           onClick={() => handleDuplicate(et)}
@@ -243,7 +261,7 @@ export default function EventsPage() {
                           <ExternalLink className="w-3.5 h-3.5" /> Preview
                         </button>
                         <button
-                          onClick={() => handleDelete(et.id)}
+                          onClick={() => handleDelete((et as any)._id ?? et.id)}
                           className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-rose hover:bg-rose-muted transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -290,7 +308,7 @@ export default function EventsPage() {
               {/* Footer */}
               <div className="flex items-center justify-between pt-3 border-t border-border">
                 <button
-                  onClick={() => toggleActive(et.id)}
+                  onClick={() => toggleActive((et as any)._id ?? et.id)}
                   className="flex items-center gap-2 text-sm text-text-sec hover:text-text transition"
                 >
                   {et.isActive ? (
